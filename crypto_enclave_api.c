@@ -2,10 +2,19 @@
 #include <os_util.h>
 #include <msgq.h>
 
+enclave_id_t ge_id = 0;
+thread_id_t gt_id = 0;
+
+void init_library(enclave_id_t e_id, thread_id_t t_id) {
+  ge_id = e_id;
+  gt_id = t_id;
+}
+
 void hash(const void * in_data,
     size_t in_data_size,
     hash_t * out_hash) {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_HASH;
   msg->args[0] = (uintptr_t) in_data;
@@ -14,12 +23,17 @@ void hash(const void * in_data,
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
 }
 
 void create_signing_key_pair (
     const key_seed_t * in_seed,
     uint64_t * out_key_id) {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_CREATE_SIGN_K;
   msg->args[0] = (uintptr_t) in_seed;
@@ -28,12 +42,17 @@ void create_signing_key_pair (
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
 }
 
 void get_public_signing_key (
     const uint64_t in_key_id,
     public_key_t * out_public_key) {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_GET_SIGN_PK;
   msg->args[0] = (uintptr_t) in_key_id;
@@ -42,6 +61,10 @@ void get_public_signing_key (
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
 }
 
 void sign (
@@ -50,6 +73,7 @@ void sign (
     const uint64_t in_key_id,
     signature_t * out_signature) {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_SIGN;
   msg->args[0] = (uintptr_t) in_message;
@@ -60,6 +84,11 @@ void sign (
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
+  if(!msg->done) printm("Error\n");
 }
 
 void verify (
@@ -68,6 +97,7 @@ void verify (
     const size_t in_message_size,
     const public_key_t * in_public_key) {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_VERIFY;
   msg->args[0] = (uintptr_t) in_signature;
@@ -78,6 +108,10 @@ void verify (
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
 }
 
 void perform_key_agreement (
@@ -85,6 +119,7 @@ void perform_key_agreement (
     const secret_key_t * secret_key_B,
     symmetric_key_t * out_key) {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_KEY_AGREEMENT;
   msg->args[0] = (uintptr_t) public_key_A;
@@ -94,16 +129,25 @@ void perform_key_agreement (
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
 }
 
 void enclave_exit() {
   queue_t *q = SHARED_REQU_QUEUE;  
+  queue_t *qresp = SHARED_RESP_QUEUE;
   msg_t *msg = (msg_t *) malloc(sizeof(msg_t));
   msg->f = F_EXIT;
   int ret;
   do {
     ret = push(q, msg);
   } while(ret != 0);
+  sm_enclave_enter(ge_id, gt_id);
+  do {
+    ret = pop(qresp, (void **) msg);
+  } while(!resp_queue_is_empty());
 }
 
 void init_enclave_queues() {

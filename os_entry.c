@@ -1,6 +1,6 @@
 #include <os_util.h>
-#include <api_untrusted.h>
 #include <crypto_enclave_api.h>
+#include <api_untrusted.h>
 #include <msgq.h>
 #include <local_cryptography.h>
 
@@ -30,8 +30,6 @@ extern char *a[];
 signature_t sigs[NUM_SIGN];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
-  volatile int *flag = (int *) SHARED_MEM_SYNC;
-
   if(core_id == 0) {
     //uint64_t region1_id = addr_to_region_id((uintptr_t) &region1);
     uint64_t region2_id = addr_to_region_id((uintptr_t) &region2);
@@ -192,84 +190,40 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       test_completed();
     }
 
-    // Let other thread know we are ready
-    while(*flag != STATE_0);
-    *flag = STATE_1;
-    asm volatile("fence");
-
-    printm("Enclave Enter\n");
-
-    result = sm_enclave_enter(enclave_id, thread_id);
-    test_completed();
-  }
-  else if (core_id == 1) {
-    *flag = STATE_0;
-    asm volatile("fence");
-    while(*flag != STATE_1);
+    init_library(enclave_id, thread_id);
 
     init_enclave_queues();
     
-    // HACKS ON HACKS - Leaves spaces for the two queues
+     // HACKS ON HACKS - Leaves spaces for the two queues
     init_heap(SHARED_MEM_REG + (2 * sizeof(queue_t)), 500 * PAGE_SIZE);
 
-    // key_seed_t *seed = malloc(sizeof(key_seed_t));
-    uint64_t key_id;
-    public_key_t *pk = malloc(sizeof(public_key_t));
+    key_seed_t seed; 
+    public_key_t pk;
+    uint64_t k_id;
 
-    msg_t *m;
-    queue_t *qresp = SHARED_RESP_QUEUE;
-    int ret;
-    
     printm("Creat SK\n");
-    create_signing_key_pair(NULL, &key_id);
-    
-    do {
-      ret = pop(qresp, (void **) &m);
-    } while((ret != 0) || (m->f != F_CREATE_SIGN_K));
-    
-    printm("Get PK %d\n", key_id);
-    get_public_signing_key(key_id, pk);
-    
-    do {
-      ret = pop(qresp, (void **) &m);
-      //if((ret == 0)) { //&& (m->f == F_VERIFY)) {
-        //printm("result\n"); // %d\n", m->ret);
-      //}
-    } while((ret != 0) || (m->f != F_GET_SIGN_PK));
+    create_signing_key_pair(&seed, &k_id);
 
+    printm("Get PK\n");
+    get_public_signing_key(k_id, &pk);
+
+    printm("Sign\n");
     // *** BEGINING BENCHMARK ***
     riscv_perf_cntr_begin();
 
-    //printm("Sign\n");
     for(int i = 0; i < NUM_SIGN; i++) {
-      if(req_queue_is_full()) { 
-        do {
-          ret = pop(qresp, (void **) &m);
-        } while(!resp_queue_is_empty());
-      }
-      sign(a[i%len_a], len_elements[i%len_a], key_id, &sigs[i]);
+      sign(a[i%len_a], len_elements[i%len_a], k_id, &sigs[i]);
     }
 
-    //printm("Send Enclave Exit\n");
-    enclave_exit();
-    
-    //printm("Done sending RPC\n");
-
-    do {
-      ret = pop(qresp, (void **) &m);
-    } while((ret != 0) || (m->f != F_EXIT));
-    
-    //printm("Last function %d\n", m->f); 
     riscv_perf_cntr_end();
     // *** END BENCHMARK *** 
- 
-    printm("Received enclave exit confirmation\n");
+    
     printm("End benchmark starts verification\n");
 
     bool res = true;
     for(int i = 0; i < NUM_SIGN; i++) {
       //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
-      res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], pk);
+      res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], &pk);
     }
     printm("Verification %s\n", (res ? "is successful": "has failed"));
 

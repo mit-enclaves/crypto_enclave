@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "crypto_enclave/crypto_enclave_util.h"
+#include <api_untrusted.h>
+
+void init_library(enclave_id_t e_id, thread_id_t t_id);
 
 void hash(const void * in_data,
   size_t in_data_size,
