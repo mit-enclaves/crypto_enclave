@@ -34,9 +34,6 @@ void enclave_entry() {
   printm("Made it here\n");
 #endif
 
-  // *** BEGINING BENCHMARK ***
-  //riscv_perf_cntr_begin();
-
   while(true) {
     ret = pop(qreq, (void **) &m);
     if(ret != 0) continue;
@@ -90,6 +87,10 @@ void enclave_entry() {
         break;
       
       case F_SIGN:
+#if TRANSFER == 1
+        riscv_perf_cntr_end();
+        sm_exit_enclave();
+#endif
 #if (DEBUG_ENCLAVE == 1)
         //printm("Signing ");
 #endif
@@ -98,12 +99,18 @@ void enclave_entry() {
           m->ret = 1;
           break;
         }
+#if SIGN == 1
+        riscv_perf_cntr_begin();
+#endif
         sign(
             (const void *) m->args[0],
             (const size_t) m->args[1],
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
             (signature_t *) m->args[3]);
+#if SIGN == 1
+        riscv_perf_cntr_end();
+#endif
         m->ret = 0;
         break;
 

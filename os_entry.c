@@ -200,6 +200,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     printm("Enclave Enter\n");
 
     result = sm_enclave_enter(enclave_id, thread_id);
+#if TRANSFER == 1
+    send_exit_cmd(0);
+#endif
     test_completed();
   }
   else if (core_id == 1) {
@@ -238,8 +241,13 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     } while((ret != 0) || (m->f != F_GET_SIGN_PK));
 
     // *** BEGINING BENCHMARK ***
+#if TOTAL == 1
     riscv_perf_cntr_begin();
+#endif
 
+#if TRANSFER == 1
+        riscv_perf_cntr_begin();
+#endif
     //printm("Sign\n");
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
@@ -260,17 +268,25 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     } while((ret != 0) || (m->f != F_EXIT));
     
     //printm("Last function %d\n", m->f); 
+#if TOTAL == 1
     riscv_perf_cntr_end();
+#endif
     // *** END BENCHMARK *** 
  
     printm("Received enclave exit confirmation\n");
     printm("End benchmark starts verification\n");
 
+#if VERIFY == 1
+    riscv_perf_cntr_begin();
+#endif
     bool res = true;
     for(int i = 0; i < NUM_SIGN; i++) {
       //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
       res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], pk);
     }
+#if VERIFY == 1
+    riscv_perf_cntr_end();
+#endif
     printm("Verification %s\n", (res ? "is successful": "has failed"));
 
     printm("End experiment\n");
