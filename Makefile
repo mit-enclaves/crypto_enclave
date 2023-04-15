@@ -16,13 +16,13 @@ DEBUG_FLAGS := -ggdb3
 CFLAGS := -march=rv64g -mcmodel=medany -mabi=lp64 -fno-common -fno-tree-loop-distribute-patterns -std=gnu11 -Wall -O3 $(DEBUG_FLAGS)
 LDFLAGS := -nostartfiles -nostdlib -static
 
-ifeq ($(EXPERIMENT_N), 1)
+ifeq ($(EXPERIMENT_N), 0)
 CFLAGS += -D TOTAL=1
-else ifeq ($(EXPERIMENT_N), 2)
+else ifeq ($(EXPERIMENT_N), 1)
 CFLAGS += -D SIGN=1
-else ifeq ($(EXPERIMENT_N), 3)
+else ifeq ($(EXPERIMENT_N), 2)
 CFLAGS += -D TRANSFER=1
-else ifeq ($(EXPERIMENT_N), 4)
+else ifeq ($(EXPERIMENT_N), 3)
 CFLAGS += -D VERIFY=1
 endif
 
