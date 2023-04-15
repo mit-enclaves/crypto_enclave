@@ -40,7 +40,6 @@ DEBUG_QEMU_FLAGS= -S -s
 
 # Define Directories
 BUILD_DIR:=$(INFRA_DIR)/build
-CRYPTO_ENCLAVE_SRC_DIR := $(INFRA_DIR)/crypto_enclave
 QUEUE_SRC_DIR := $(INFRA_DIR)/msgq
 PLATFORM_DIR := $(INFRA_DIR)/platform
 API_DIR := $(INFRA_DIR)/sm_api

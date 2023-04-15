@@ -1,7 +1,5 @@
 #include "os_util.h"
 
-#include <msgq.h>
-
 #define ALIGNMENT 8
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~(ALIGNMENT-1))
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t))) // header size

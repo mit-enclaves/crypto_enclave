@@ -2,12 +2,9 @@
 # Assumes: $(BUILD_DIR)
 # Assumes: $(INFRA_DIR)
 # Assumes: $(PLATFORM_DIR)
-# Assumes: $(CRYPTO_ENCLAVE_SRC_DIR)
 # Assumes: $(QUEUE_SRC_DIR)
 # Assumes: $(CC)
 # Assumes: $(OBJCOPY)
-
-include $(CRYPTO_ENCLAVE_SRC_DIR)/Makefrag
 
 # Flags
 INFRA_CFLAGS := $(CFLAGS)
@@ -73,19 +70,18 @@ INFRA_INCLUDES := \
 
 # Sources
 PAYLOAD_SRC := \
-	$(INFRA_DIR)/enclave_bin.S \
 	$(INFRA_DIR)/os_entry.S \
 	$(INFRA_DIR)/os_entry.c \
 	$(INFRA_DIR)/os_util.c \
-	$(INFRA_DIR)/crypto_enclave_api.c \
 	$(INFRA_DIR)/clib/memset.c \
 	$(INFRA_DIR)/clib/memcpy.c \
 	$(INFRA_DIR)/ed25519/verify.c \
 	$(INFRA_DIR)/ed25519/sha512.c \
+	$(INFRA_DIR)/ed25519/sign.c \
+	$(INFRA_DIR)/ed25519/keypair.c \
 	$(INFRA_DIR)/ed25519/sc.c \
 	$(INFRA_DIR)/ed25519/ge.c \
 	$(INFRA_DIR)/ed25519/fe.c \
-  $(QUEUE_SRC_DIR)/msgq.c \
 	$(PLATFORM_DIR)/idpt.S \
 	$(PLATFORM_DIR)/htif_for_linking.c \
 	$(PLATFORM_DIR)/sm_keys.c \
@@ -94,8 +90,8 @@ PAYLOAD_SRC := \
 	$(INPUTS) \
 
 # Rules
-$(PAYLOAD_ELF): $(PAYLOAD_SRC) $(INFRA_LD) $(BUILD_DIR) $(SM_BINARY) $(CRYPTO_ENCLAVE_BIN) $(IDPT_BIN)
-	$(CC) $(CFLAGS) $(addprefix -I , $(INFRA_INCLUDES)) $(INFRA_LDFLAGS) -T $(INFRA_LD) $(PAYLOAD_SRC) -D IDPT_FILE=\"$(IDPT_BIN)\" -D ENCLAVE_BINARY_FILE=\"$(CRYPTO_ENCLAVE_BIN)\" -D SM_BINARY_FILE=\"$(SM_BINARY)\" -o $@
+$(PAYLOAD_ELF): $(PAYLOAD_SRC) $(INFRA_LD) $(BUILD_DIR) $(SM_BINARY) $(IDPT_BIN)
+	$(CC) $(CFLAGS) $(addprefix -I , $(INFRA_INCLUDES)) $(INFRA_LDFLAGS) -T $(INFRA_LD) $(PAYLOAD_SRC) -D IDPT_FILE=\"$(IDPT_BIN)\" -D SM_BINARY_FILE=\"$(SM_BINARY)\" -o $@
 
 .PHONY: untrusted_infra
 untrusted_infra: $(PAYLOAD_ELF)
