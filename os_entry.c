@@ -29,7 +29,7 @@ extern char *a[];
 
 signature_t sigs[NUM_SIGN];
 
-void test_entry(int core_id, uintptr_t fdt_addr) {
+void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
 
   if(core_id == 0) {
@@ -238,7 +238,7 @@ void test_entry(int core_id, uintptr_t fdt_addr) {
     } while((ret != 0) || (m->f != F_GET_SIGN_PK));
 
     // *** BEGINING BENCHMARK ***
-    //riscv_perf_cntr_begin();
+    riscv_perf_cntr_begin();
 
     //printm("Sign\n");
     for(int i = 0; i < NUM_SIGN; i++) {
@@ -260,7 +260,7 @@ void test_entry(int core_id, uintptr_t fdt_addr) {
     } while((ret != 0) || (m->f != F_EXIT));
     
     //printm("Last function %d\n", m->f); 
-    //riscv_perf_cntr_end();
+    riscv_perf_cntr_end();
     // *** END BENCHMARK *** 
  
     printm("Received enclave exit confirmation\n");

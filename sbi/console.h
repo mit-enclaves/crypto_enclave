@@ -1,7 +1,7 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include <sbi/sbi_kernel.h>
+#include <sbi_kernel.h>
 #include <stdint.h>
 #include <stdarg.h>
 
