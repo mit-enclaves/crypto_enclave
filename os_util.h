@@ -12,6 +12,7 @@ void os_entry(int core_id, uintptr_t fdt_addr) __attribute__((noreturn));
 
 static inline void test_completed (void) __attribute__((noreturn));
 static inline void test_completed (void) {
+  print_str("END TEST\n");
   while(1);
   //send_exit_cmd(0);  
 }
@@ -29,9 +30,19 @@ static inline void * region_id_to_addr (uint64_t region_id) {
   return (void *)(RAM_BASE + (region_id << REGION_SHIFT));
 }
 
-#define SHARED_MEM_REG (0x8a000000)
-#define SHARED_REQU_QUEUE ((queue_t *) SHARED_MEM_REG)
-#define SHARED_RESP_QUEUE ((queue_t *) (SHARED_MEM_REG + sizeof(queue_t)))
+#define DRAWER_MEM_REG ((uintptr_t) 0x8a000000)
+#define DRAWER_REQU_QUEUE ((queue_t *) DRAWER_MEM_REG)
+#define DRAWER_RESP_QUEUE ((queue_t *) (DRAWER_MEM_REG + sizeof(queue_t)))
+
+#define DRAWER_VIRT (0x21000000)
+
+static inline void *get_va(void *addr) {
+  return (void *) ((uintptr_t)addr - (DRAWER_MEM_REG - DRAWER_VIRT));
+}
+
+static inline void *get_pa(void *addr) {
+  return (void *) ((uintptr_t)addr + (DRAWER_MEM_REG - DRAWER_VIRT));
+}
 
 void init_heap();
 void *malloc(size_t size);

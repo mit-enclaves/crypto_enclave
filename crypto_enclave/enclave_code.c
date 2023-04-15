@@ -4,9 +4,16 @@
 #include <msgq.h>
 #include <crypto_enclave_util.h>
 
-#define SHARED_MEM_REG (0x8a000000)
-#define SHARED_REQU_QUEUE ((queue_t *) SHARED_MEM_REG)
-#define SHARED_RESP_QUEUE ((queue_t *) (SHARED_MEM_REG + sizeof(queue_t)))
+#if (DEBUG_ENCLAVE == 1)
+#include "../sbi/console.h"
+#endif
+
+#define DRAWER_MEM_REG ((uintptr_t) 0x21000000)
+#define DRAWER_MEM_REG_ID (0x5)
+#define DRAWER_REQU_QUEUE ((queue_t *) DRAWER_MEM_REG)
+#define DRAWER_RESP_QUEUE ((queue_t *) (DRAWER_MEM_REG + sizeof(queue_t)))
+
+void serve_requests();
 
 #if (DEBUG_ENCLAVE == 1)
 #include "../sbi/console.h"
@@ -24,20 +31,41 @@ key_entry_t key_directory[SIZE_KEY_DIR] = {0};
 key_seed_t fake_randomness = {0};
 
 void enclave_entry() {
-  queue_t * qreq = SHARED_REQU_QUEUE;
-  queue_t * qres = SHARED_RESP_QUEUE;
+#if (DEBUG_ENCLAVE == 1)
+  printm("Made it here\n");
+#endif
+  api_result_t result;
+  uint64_t drawer_region_id = DRAWER_MEM_REG_ID;
+
+  while(1) {
+    
+    do {
+    result = sm_region_block(drawer_region_id);
+    } while ((result == MONITOR_CONCURRENT_CALL) || (result == MONITOR_INVALID_STATE));
+    if (result != MONITOR_OK) {
+      while(1); // PANIC
+    }
+
+    do {
+      result = sm_region_check_owned(drawer_region_id);
+    } while(result != MONITOR_OK);
+
+    serve_requests();
+
+  }
+}
+
+void serve_requests() {
+  queue_t * qreq = DRAWER_REQU_QUEUE;
+  queue_t * qres = DRAWER_RESP_QUEUE;
 
   msg_t *m;
   int ret;
 
-#if (DEBUG_ENCLAVE == 1)
-  printm("Made it here\n");
-#endif
-
   // *** BEGINING BENCHMARK ***
   //riscv_perf_cntr_begin();
 
-  while(true) {
+  while(!is_empty(qreq)) {
     ret = pop(qreq, (void **) &m);
     if(ret != 0) continue;
     uint64_t key_id;
@@ -91,7 +119,7 @@ void enclave_entry() {
       
       case F_SIGN:
 #if (DEBUG_ENCLAVE == 1)
-        //printm("Signing ");
+        //printm("Signing\n");
 #endif
         key_id =  m->args[2];
         if(!key_directory[key_id].init) {
@@ -117,6 +145,7 @@ void enclave_entry() {
       case F_KEY_AGREEMENT:
         break;
       case F_EXIT:
+        sm_region_block(DRAWER_MEM_REG_ID);
         m->ret = 0;
         m->done = true;
         do {
