@@ -537,23 +537,26 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     // *** END BENCHMARK *** 
     
     printm("Received enclave exit confirmation\n");
-    printm("End benchmark starts verification\n");
+    int cmd = 0;
 
 #if VERIFY == 1
+    printm("End benchmark starts verification\n");
+
     riscv_perf_cntr_begin();
-#endif
+    
     bool res = true;
     for(int i = 0; i < NUM_SIGN; i++) {
       //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
       res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], &pk);
     }
-#if VERIFY == 1
+    
     riscv_perf_cntr_end();
-#endif
+    
     printm("Verification %s\n", (res ? "is successful": "has failed"));
+    cmd = (res == true) ? 0: 1;
+#endif
 
     printm("End experiment\n");
-    int cmd = (res == true) ? 0: 1;
     send_exit_cmd(cmd);
     test_completed();
   }
