@@ -19,7 +19,6 @@ void serve_requests();
 #include "../sbi/console.h"
 #endif
 
-
 #define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
 #define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
 
@@ -49,6 +48,13 @@ void enclave_entry() {
     do {
       result = sm_region_check_owned(drawer_region_id);
     } while(result != MONITOR_OK);
+    // *** RECEIVED REQ Q ***
+#if TRANS_REQ == 1
+    riscv_perf_cntr_end();
+#endif
+#if PROCESSING == 1
+    riscv_perf_cntr_begin();
+#endif
 
     serve_requests();
 
@@ -61,9 +67,6 @@ void serve_requests() {
 
   msg_t *m;
   int ret;
-
-  // *** BEGINING BENCHMARK ***
-  //riscv_perf_cntr_begin();
 
   while(!is_empty(qreq)) {
     ret = pop(qreq, (void **) &m);
@@ -118,20 +121,23 @@ void serve_requests() {
         break;
       
       case F_SIGN:
-#if (DEBUG_ENCLAVE == 1)
-        //printm("Signing\n");
-#endif
         key_id =  m->args[2];
         if(!key_directory[key_id].init) {
           m->ret = 1;
           break;
         }
+#if SIGN == 1
+        riscv_perf_cntr_begin();
+#endif
         sign(
             (const void *) m->args[0],
             (const size_t) m->args[1],
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
             (signature_t *) m->args[3]);
+#if SIGN == 1
+        riscv_perf_cntr_end();
+#endif
         m->ret = 0;
         break;
 
@@ -162,4 +168,11 @@ void serve_requests() {
       ret = push(qres, m);
     } while(ret != 0);
   }
+  // *** RECEIVED REQ Q ***
+#if PROCESSING == 1
+  riscv_perf_cntr_end();
+#endif
+#if TRANS_RESP == 1
+  riscv_perf_cntr_begin();
+#endif
 }

@@ -8,13 +8,35 @@ CC=riscv64-unknown-elf-gcc
 OBJCOPY=riscv64-unknown-elf-objcopy
 OBJDUMP=riscv64-unknown-elf-objdump
 
-DEBUG_ENCLAVE=1
+DEBUG_ENCLAVE=0
 
 # Flags
 # -mcmodel=medany is *very* important - it ensures the program addressing is PC-relative. Ensure no global variables are used. To quote from the spec, "the program and its statically defined symbols must lie within any single 2 GiB address range. Addressing for global symbols uses lui/addi instruction pairs, which emit the R_RISCV_PCREL_HI20/R_RISCV_PCREL_LO12_I sequences."
 DEBUG_FLAGS := -ggdb3
 CFLAGS := -march=rv64g -mcmodel=medany -mabi=lp64 -fno-common -fno-tree-loop-distribute-patterns -std=gnu11 -Wall -O3 $(DEBUG_FLAGS)
 LDFLAGS := -nostartfiles -nostdlib -static
+
+ifeq ($(EXPERIMENT_N), 0)
+CFLAGS += -D TOTAL=1
+else ifeq ($(EXPERIMENT_N), 1)
+CFLAGS += -D PREPARE_IN=1
+else ifeq ($(EXPERIMENT_N), 2)
+CFLAGS += -D TRANS_REQ=1
+else ifeq ($(EXPERIMENT_N), 3)
+CFLAGS += -D PROCESSING=1
+else ifeq ($(EXPERIMENT_N), 4)
+CFLAGS += -D TRANS_RESP=1
+else ifeq ($(EXPERIMENT_N), 5)
+CFLAGS += -D RECEIVE_OUT=1
+else ifeq ($(EXPERIMENT_N), 6)
+CFLAGS += -D COPY_IN=1
+else ifeq ($(EXPERIMENT_N), 7)
+CFLAGS += -D SIGN=1
+else ifeq ($(EXPERIMENT_N), 8)
+CFLAGS += -D COPY_OUT=1
+else ifeq ($(EXPERIMENT_N), 9)
+CFLAGS += -D VERIFY=1
+endif
 
 FLAGS_DEBUG_ENCLAVE :=
 ifeq ($(DEBUG_ENCLAVE), 1)

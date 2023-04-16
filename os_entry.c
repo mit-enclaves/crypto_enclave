@@ -337,14 +337,31 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 
     printm("Sign\n");
     // *** BEGINING BENCHMARK ***
+#if TOTAL == 1
     riscv_perf_cntr_begin();
-
+#endif
+#if PREPARE_IN == 1
+    riscv_perf_cntr_begin();
+#endif
     int cnt_sig = 0;
-
     for(int i = 0; i < NUM_SIGN; i++) {
-      if(req_queue_is_full()) { 
+      if(req_queue_is_full()) {
+        // *** Q IS FULL ***
+#if PREPARE_IN == 1
+        riscv_perf_cntr_end();
+#endif
+#if TRANS_REQ == 1
+        riscv_perf_cntr_begin();
+#endif
         push_drawer_region(*enclave_id_ptr);
         pull_drawer_region();
+        // *** RECEIVED RESP Q ***
+#if TRANS_RESP == 1
+        riscv_perf_cntr_end();
+#endif
+#if RECEIVE_OUT == 1
+        riscv_perf_cntr_begin();
+#endif
         do {
           ret = pop(qresp, (void **) &m);
           m = (msg_t *) get_pa(m);
@@ -355,7 +372,13 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
             case F_GET_SIGN_PK:
               break;
             case F_SIGN:
+#if COPY_OUT == 1
+              riscv_perf_cntr_begin();
+#endif
               memcpy(&sigs[cnt_sig],  get_pa((void *)m->args[3]), sizeof(signature_t));
+#if COPY_OUT == 1
+              riscv_perf_cntr_end();
+#endif
               free(get_pa((void *) m->args[0]));
               free(get_pa((void *) m->args[3]));
               free(m);
@@ -367,15 +390,42 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
               break;
           } 
         } while(!resp_queue_is_empty());
+        // *** OUTPUT PROCESSED ***
+#if RECEIVE_OUT == 1
+        riscv_perf_cntr_end();
+#endif
+#if PREPARE_IN == 1
+        riscv_perf_cntr_begin();
+#endif
       }
       signature_t *s_drw   = malloc(sizeof(signature_t));
       char *message_drw = malloc(sizeof(char) * len_elements[i%len_a]);
+#if COPY_IN == 1
+      riscv_perf_cntr_begin();
+#endif
       memcpy(message_drw, a[i%len_a], sizeof(char) * len_elements[i%len_a]);
+#if COPY_IN == 1
+              riscv_perf_cntr_end();
+#endif
       sign(get_va(message_drw), len_elements[i%len_a], key_id, get_va(s_drw));
     }
-   
+  
+    // *** INPUT SENT ***
+#if PREPARE_IN == 1
+    riscv_perf_cntr_end();
+#endif
+#if TRANS_REQ == 1
+    riscv_perf_cntr_begin();
+#endif
     push_drawer_region(*enclave_id_ptr);
     pull_drawer_region();
+    // *** RECEIVED RESP Q ***
+#if TRANS_RESP == 1
+    riscv_perf_cntr_end();
+#endif
+#if RECEIVE_OUT == 1
+    riscv_perf_cntr_begin();
+#endif
 
     do {
       ret = pop(qresp, (void **) &m);
@@ -387,7 +437,13 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
         case F_GET_SIGN_PK:
           break;
         case F_SIGN:
+#if COPY_OUT == 1
+          riscv_perf_cntr_begin();
+#endif
           memcpy(&sigs[cnt_sig],  get_pa((void *) m->args[3]), sizeof(signature_t));
+#if COPY_OUT == 1
+          riscv_perf_cntr_end();
+#endif
           free(get_pa((void *) m->args[0]));
           free(get_pa((void *) m->args[3]));
           free(m);
@@ -399,30 +455,62 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
           break;
       } 
     } while(!resp_queue_is_empty());
+    // *** OUTPUT PROCESSED ***
+#if RECEIVE_OUT == 1
+    riscv_perf_cntr_end();
+#endif
+#if PREPARE_IN == 1
+    riscv_perf_cntr_begin();
+#endif
     
-    printm("Sending enclave exit\n");
     enclave_exit();
 
+    // *** INPUT SENT ***
+#if PREPARE_IN == 1
+    riscv_perf_cntr_end();
+#endif
+#if TRANS_REQ == 1
+    riscv_perf_cntr_begin();
+#endif
+    
     push_drawer_region(*enclave_id_ptr);
     pull_drawer_region();
+    
+    // *** RECEIVED RESP Q ***
+#if TRANS_RESP == 1
+    riscv_perf_cntr_end();
+#endif
+#if RECEIVE_OUT == 1
+    riscv_perf_cntr_begin();
+#endif
     
     do{
       ret = pop(qresp, (void **) &m);
       m = (msg_t *) get_pa(m);
     } while((ret != 0) || (m->f != F_EXIT));
     
-    //printm("Last function %d\n", m->f); 
-    //riscv_perf_cntr_end();
+#if RECEIVE_OUT == 1
+    riscv_perf_cntr_end();
+#endif
+#if TOTAL == 1
+    riscv_perf_cntr_end();
+#endif
     // *** END BENCHMARK *** 
     
     printm("Received enclave exit confirmation\n");
     printm("End benchmark starts verification\n");
 
+#if VERIFY == 1
+    riscv_perf_cntr_begin();
+#endif
     bool res = true;
     for(int i = 0; i < NUM_SIGN; i++) {
       //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
       res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], &pk);
     }
+#if VERIFY == 1
+    riscv_perf_cntr_end();
+#endif
     printm("Verification %s\n", (res ? "is successful": "has failed"));
 
     printm("End experiment\n");
