@@ -8,8 +8,8 @@ CC=riscv64-unknown-elf-gcc
 OBJCOPY=riscv64-unknown-elf-objcopy
 OBJDUMP=riscv64-unknown-elf-objdump
 
-DEBUG_ENCLAVE=1
-DEBUG=1
+DEBUG_ENCLAVE=0
+DEBUG=0
 
 FLAGS_DEBUG_ENCLAVE :=
 ifeq ($(DEBUG), 1)

@@ -37,7 +37,7 @@ void enclave_entry() {
   while(1) {
     
     do {
-    result = sm_region_block(drawer_region_id);
+      result = sm_region_block(drawer_region_id);
     } while ((result == MONITOR_CONCURRENT_CALL) || (result == MONITOR_INVALID_STATE));
     if (result != MONITOR_OK) {
       while(1); // PANIC
@@ -173,14 +173,16 @@ void serve_requests() {
         do {
           ret = push(qres, m);
         } while(ret != 0);
-        sm_region_block(DRAWER_MEM_REG_ID);
         api_result_t res;
-        while(1) {
+        do {
+          res = sm_region_block(DRAWER_MEM_REG_ID);
+        } while(res != MONITOR_OK);
+        do {
           res = sm_exit_enclave();
 #if DEBUG == 1
           printm("TRY AGAIN ERR %d\n", res);
 #endif
-        }
+        } while(res != MONITOR_OK);
 #if DEBUG == 1
         printm("I AM STILL HERE\n");
 #endif

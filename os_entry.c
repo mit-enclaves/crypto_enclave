@@ -24,8 +24,7 @@ extern uintptr_t enclave_end;
 void pull_drawer_region();
 void push_drawer_region(enclave_id_t enclave_id);
 
-//#define NUM_SIGN 256 * 12
-#define NUM_SIGN 64
+#define NUM_SIGN 256 * 12
 
 // INPUTS
 extern int len_a;
