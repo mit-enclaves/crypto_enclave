@@ -29,6 +29,8 @@ key_entry_t key_directory[SIZE_KEY_DIR] = {0};
 // Hack for now
 key_seed_t fake_randomness = {0};
 
+int flag = 1;
+
 void enclave_entry() {
 #if (DEBUG_ENCLAVE == 1)
   printm("Made it here\n");
@@ -48,14 +50,18 @@ void enclave_entry() {
     do {
       result = sm_region_check_owned(drawer_region_id);
     } while(result != MONITOR_OK);
-    // *** RECEIVED REQ Q ***
-    printm("// *** REQ Q RECEIVED ***\n");
+    
+    if (flag >= 3) {
+      flag++;
+      // *** RECEIVED REQ Q ***
+      printm("2 *** REQ Q RECEIVED ***\n");
 #if TRANS_REQ == 1
-    riscv_perf_cntr_end();
+      riscv_perf_cntr_end();
 #endif
 #if PROCESSING == 1
-    riscv_perf_cntr_begin();
+      riscv_perf_cntr_begin();
 #endif
+    }
 
     serve_requests();
 
@@ -109,6 +115,7 @@ void serve_requests() {
         key_directory[key_id].init = true;
         *((int *) m->args[1]) = key_id;
         m->ret = 0;
+        flag++;
         break;
       
       case F_GET_SIGN_PK:
@@ -119,6 +126,7 @@ void serve_requests() {
         }
         memcpy((public_key_t *) m->args[1], &key_directory[key_id].pk, sizeof(public_key_t));
         m->ret = 0;
+        flag++;
         break;
       
       case F_SIGN:
@@ -152,14 +160,20 @@ void serve_requests() {
       case F_KEY_AGREEMENT:
         break;
       case F_EXIT:
-        sm_region_block(DRAWER_MEM_REG_ID);
         m->ret = 0;
         m->done = true;
+        // *** OUTPUT READY ***
+        printm("3 *** OUTPUT READY ***\n");
+#if PROCESSING == 1
+        riscv_perf_cntr_end();
+#endif
+#if TRANS_RESP == 1
+        riscv_perf_cntr_begin();
+#endif
         do {
           ret = push(qres, m);
         } while(ret != 0);
-        //riscv_perf_cntr_end();
-        // *** END BENCHMARK *** 
+        sm_region_block(DRAWER_MEM_REG_ID);
         sm_exit_enclave();
       default:
         break;
@@ -169,12 +183,14 @@ void serve_requests() {
       ret = push(qres, m);
     } while(ret != 0);
   }
-  // *** OUTPUT READY ***
-  printm("// *** OUTPUT READY ***\n");
+  if (flag > 3) {
+    // *** OUTPUT READY ***
+    printm("3 *** OUTPUT READY ***\n");
 #if PROCESSING == 1
-  riscv_perf_cntr_end();
+    riscv_perf_cntr_end();
 #endif
 #if TRANS_RESP == 1
-  riscv_perf_cntr_begin();
+    riscv_perf_cntr_begin();
 #endif
+  }
 }
