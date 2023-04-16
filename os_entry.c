@@ -24,7 +24,8 @@ extern uintptr_t enclave_end;
 void pull_drawer_region();
 void push_drawer_region(enclave_id_t enclave_id);
 
-#define NUM_SIGN 256 * 12
+//#define NUM_SIGN 256 * 12
+#define NUM_SIGN 64
 
 // INPUTS
 extern int len_a;
@@ -277,6 +278,11 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     printm("Enclave Enter\n");
 
     result = sm_enclave_enter(enclave_id, thread_id);
+
+#if DEBUG == 1
+    printm("Enclave has returned\n");
+#endif
+
     test_completed();
   }
   else if (core_id == 1) {
@@ -337,7 +343,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 
     printm("Sign\n");
     // *** BEGINING BENCHMARK ***
+#if DEBUG == 1
     printm("0 *** BEGINING BENCHMARK ***\n");
+#endif
 #if TOTAL == 1
     riscv_perf_cntr_begin();
 #endif
@@ -348,7 +356,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) {
         // *** Q IS FULL ***
+#if DEBUG == 1
         printm("1 *** REQ Q IS FULL ***\n");
+#endif
 #if PREPARE_IN == 1
         riscv_perf_cntr_end();
 #endif
@@ -358,7 +368,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
         push_drawer_region(*enclave_id_ptr);
         pull_drawer_region();
         // *** RECEIVED RESP Q ***
+#if DEBUG == 1
         printm("4 *** RESP Q RECEIVED ***\n");
+#endif
 #if TRANS_RESP == 1
         riscv_perf_cntr_end();
 #endif
@@ -394,7 +406,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
           } 
         } while(!resp_queue_is_empty());
         // *** OUTPUT PROCESSED ***
+#if DEBUG == 1
         printm("5 *** OUTPUT PROCESSED ***\n");
+#endif
 #if RECEIVE_OUT == 1
         riscv_perf_cntr_end();
 #endif
@@ -415,7 +429,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     }
   
     // *** INPUT READY ***
+#if DEBUG == 1
     printm("1 *** INPUT READY ***\n");
+#endif
 #if PREPARE_IN == 1
     riscv_perf_cntr_end();
 #endif
@@ -425,7 +441,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     push_drawer_region(*enclave_id_ptr);
     pull_drawer_region();
     // *** RECEIVED RESP Q ***
+#if DEBUG == 1
     printm("4 *** RESP Q RECEIVED ***\n");
+#endif
 #if TRANS_RESP == 1
     riscv_perf_cntr_end();
 #endif
@@ -462,7 +480,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       } 
     } while(!resp_queue_is_empty());
     // *** OUTPUT PROCESSED ***
+#if DEBUG == 1
     printm("5 *** OUTPUT PROCESSED ***\n");
+#endif
 #if RECEIVE_OUT == 1
     riscv_perf_cntr_end();
 #endif
@@ -473,7 +493,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     enclave_exit();
 
     // *** INPUT SENT ***
+#if DEBUG == 1
     printm("1 *** INPUT READY ***\n");
+#endif
 #if PREPARE_IN == 1
     riscv_perf_cntr_end();
 #endif
@@ -483,9 +505,11 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     
     push_drawer_region(*enclave_id_ptr);
     pull_drawer_region();
-    
+   
     // *** RECEIVED RESP Q ***
+#if DEBUG == 1
     printm("4 *** RESP Q RECEIVED ***\n");
+#endif
 #if TRANS_RESP == 1
     riscv_perf_cntr_end();
 #endif
@@ -498,14 +522,18 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       m = (msg_t *) get_pa(m);
     } while((ret != 0) || (m->f != F_EXIT));
     
+#if DEBUG == 1
     printm("5 *** OUTPUT PROCESSED ***\n");
+#endif
 #if RECEIVE_OUT == 1
     riscv_perf_cntr_end();
 #endif
 #if TOTAL == 1
     riscv_perf_cntr_end();
 #endif
+#if DEBUG == 1
     printm("6 *** END BENCHMARK ***\n");
+#endif
     // *** END BENCHMARK *** 
     
     printm("Received enclave exit confirmation\n");

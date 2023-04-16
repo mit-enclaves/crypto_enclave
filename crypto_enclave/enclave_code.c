@@ -15,10 +15,6 @@
 
 void serve_requests();
 
-#if (DEBUG_ENCLAVE == 1)
-#include "../sbi/console.h"
-#endif
-
 #define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
 #define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
 
@@ -54,7 +50,9 @@ void enclave_entry() {
     if (flag >= 3) {
       flag++;
       // *** RECEIVED REQ Q ***
+#if DEBUG == 1
       printm("2 *** REQ Q RECEIVED ***\n");
+#endif
 #if TRANS_REQ == 1
       riscv_perf_cntr_end();
 #endif
@@ -163,7 +161,9 @@ void serve_requests() {
         m->ret = 0;
         m->done = true;
         // *** OUTPUT READY ***
+#if DEBUG == 1
         printm("3 *** OUTPUT READY ***\n");
+#endif
 #if PROCESSING == 1
         riscv_perf_cntr_end();
 #endif
@@ -174,7 +174,16 @@ void serve_requests() {
           ret = push(qres, m);
         } while(ret != 0);
         sm_region_block(DRAWER_MEM_REG_ID);
-        sm_exit_enclave();
+        api_result_t res;
+        while(1) {
+          res = sm_exit_enclave();
+#if DEBUG == 1
+          printm("TRY AGAIN ERR %d\n", res);
+#endif
+        }
+#if DEBUG == 1
+        printm("I AM STILL HERE\n");
+#endif
       default:
         break;
     } 
@@ -185,7 +194,9 @@ void serve_requests() {
   }
   if (flag > 3) {
     // *** OUTPUT READY ***
+#if DEBUG == 1
     printm("3 *** OUTPUT READY ***\n");
+#endif
 #if PROCESSING == 1
     riscv_perf_cntr_end();
 #endif
