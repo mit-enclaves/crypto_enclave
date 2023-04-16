@@ -49,6 +49,7 @@ void enclave_entry() {
       result = sm_region_check_owned(drawer_region_id);
     } while(result != MONITOR_OK);
     // *** RECEIVED REQ Q ***
+    printm("// *** REQ Q RECEIVED ***\n");
 #if TRANS_REQ == 1
     riscv_perf_cntr_end();
 #endif
@@ -168,7 +169,8 @@ void serve_requests() {
       ret = push(qres, m);
     } while(ret != 0);
   }
-  // *** RECEIVED REQ Q ***
+  // *** OUTPUT READY ***
+  printm("// *** OUTPUT READY ***\n");
 #if PROCESSING == 1
   riscv_perf_cntr_end();
 #endif
