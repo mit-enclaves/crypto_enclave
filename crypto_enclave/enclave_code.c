@@ -102,7 +102,7 @@ void enclave_entry() {
       
       case F_SIGN:
 #if (DEBUG_ENCLAVE == 1)
-        //printm("Signing ");
+        //printm("Signing\n");
 #endif
         key_id =  m->args[2];
         if(!key_directory[key_id].init) {
@@ -142,12 +142,12 @@ void enclave_entry() {
 #if PROCESSING == 1
         riscv_perf_cntr_end();
 #endif
-        do {
+        while(1) {
           sm_exit_enclave();
 #if (DEBUG_ENCLAVE == 1)
           printm("Had to try exiting again\n");
 #endif
-        } while(1);
+        }
       default:
         break;
     } 
