@@ -39,21 +39,9 @@ void get_public_signing_key (
   msg->args[0] = (uintptr_t) in_key_id;
   msg->args[1] = (uintptr_t) out_public_key;
   int ret;
-#if PREPARE_IN == 1
-        riscv_perf_cntr_end();
-#endif
-#if WAIT_UNTR == 1
-        riscv_perf_cntr_begin();
-#endif
   do {
     ret = push(q, msg);
   } while(ret != 0);
-#if WAIT_UNTR == 1
-    riscv_perf_cntr_end();
-#endif
-#if PREPARE_IN == 1
-    riscv_perf_cntr_begin();
-#endif
 }
 
 void sign (
@@ -69,9 +57,21 @@ void sign (
   msg->args[2] = (uintptr_t) in_key_id;
   msg->args[3] = (uintptr_t) out_signature;
   int ret;
+#if PREPARE_IN == 1
+  riscv_perf_cntr_end();
+#endif
+#if WAIT_UNTR == 1
+  riscv_perf_cntr_begin();
+#endif
   do {
     ret = push(q, msg);
   } while(ret != 0);
+#if WAIT_UNTR == 1
+  riscv_perf_cntr_end();
+#endif
+#if PREPARE_IN == 1
+  riscv_perf_cntr_begin();
+#endif
 }
 
 void verify (
@@ -114,19 +114,19 @@ void enclave_exit() {
   msg->f = F_EXIT;
   int ret;
 #if PREPARE_IN == 1
-        riscv_perf_cntr_end();
+  riscv_perf_cntr_end();
 #endif
 #if WAIT_UNTR == 1
-        riscv_perf_cntr_begin();
+  riscv_perf_cntr_begin();
 #endif
   do {
     ret = push(q, msg);
   } while(ret != 0);
 #if WAIT_UNTR == 1
-    riscv_perf_cntr_end();
+  riscv_perf_cntr_end();
 #endif
 #if PREPARE_IN == 1
-    riscv_perf_cntr_begin();
+  riscv_perf_cntr_begin();
 #endif
 }
 

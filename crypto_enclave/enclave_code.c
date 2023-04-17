@@ -43,8 +43,7 @@ void enclave_entry() {
     ret = pop(qreq, (void **) &m);
     if(ret != 0) continue;
     uint64_t key_id;
-    flag++;
-    if(flag >= 3) {
+    if(flag == 3) {
 #if WAIT_ENC == 1
       riscv_perf_cntr_end();
 #endif
@@ -52,6 +51,7 @@ void enclave_entry() {
       riscv_perf_cntr_begin();
 #endif
     }
+    flag++;
     switch((m)->f) {
       case F_HASH:
         hash((const void *) m->args[0],
