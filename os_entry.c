@@ -204,7 +204,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     printm("Creat SK\n");
     create_signing_key_pair(&seed, &k_id);
 
-    printm("Get PK\n");
+    printm("Get PK %d\n", k_id);
     get_public_signing_key(k_id, &pk);
 
     printm("Sign\n");
