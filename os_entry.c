@@ -237,10 +237,10 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       //}
     } while((ret != 0) || (m->f != F_GET_SIGN_PK));
 
+    printm("Sign\n");
     // *** BEGINING BENCHMARK ***
     riscv_perf_cntr_begin();
 
-    //printm("Sign\n");
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
         do {
@@ -250,16 +250,12 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       sign(a[i%len_a], len_elements[i%len_a], key_id, &sigs[i]);
     }
 
-    //printm("Send Enclave Exit\n");
     enclave_exit();
     
-    //printm("Done sending RPC\n");
-
     do {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_EXIT));
     
-    //printm("Last function %d\n", m->f); 
     riscv_perf_cntr_end();
     // *** END BENCHMARK *** 
  
