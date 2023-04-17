@@ -145,15 +145,18 @@ void serve_requests() {
       case F_KEY_AGREEMENT:
         break;
       case F_EXIT:
-        sm_region_block(DRAWER_MEM_REG_ID);
         m->ret = 0;
         m->done = true;
         do {
           ret = push(qres, m);
         } while(ret != 0);
-        //riscv_perf_cntr_end();
-        // *** END BENCHMARK *** 
-        sm_exit_enclave();
+        api_result_t result;
+        do {
+          result = sm_region_block(DRAWER_MEM_REG_ID);
+        } while(result != MONITOR_OK);
+        while(1) {
+          sm_exit_enclave();
+        }
       default:
         break;
     } 

@@ -340,7 +340,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     riscv_perf_cntr_begin();
 
     int cnt_sig = 0;
-
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
         push_drawer_region(*enclave_id_ptr);
@@ -400,7 +399,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       } 
     } while(!resp_queue_is_empty());
     
-    printm("Sending enclave exit\n");
     enclave_exit();
 
     push_drawer_region(*enclave_id_ptr);
@@ -411,8 +409,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       m = (msg_t *) get_pa(m);
     } while((ret != 0) || (m->f != F_EXIT));
     
-    //printm("Last function %d\n", m->f); 
-    //riscv_perf_cntr_end();
+    riscv_perf_cntr_end();
     // *** END BENCHMARK *** 
     
     printm("Received enclave exit confirmation\n");
@@ -484,4 +481,3 @@ void push_drawer_region(enclave_id_t enclave_id) {
   }
 
 }
-
