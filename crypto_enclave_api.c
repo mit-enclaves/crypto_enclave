@@ -39,9 +39,21 @@ void get_public_signing_key (
   msg->args[0] = (uintptr_t) in_key_id;
   msg->args[1] = (uintptr_t) out_public_key;
   int ret;
+#if PREPARE_IN == 1
+        riscv_perf_cntr_end();
+#endif
+#if WAIT_UNTR == 1
+        riscv_perf_cntr_begin();
+#endif
   do {
     ret = push(q, msg);
   } while(ret != 0);
+#if WAIT_UNTR == 1
+    riscv_perf_cntr_end();
+#endif
+#if PREPARE_IN == 1
+    riscv_perf_cntr_begin();
+#endif
 }
 
 void sign (
@@ -101,9 +113,21 @@ void enclave_exit() {
   msg_t *msg = (msg_t *) malloc(sizeof(msg_t));
   msg->f = F_EXIT;
   int ret;
+#if PREPARE_IN == 1
+        riscv_perf_cntr_end();
+#endif
+#if WAIT_UNTR == 1
+        riscv_perf_cntr_begin();
+#endif
   do {
     ret = push(q, msg);
   } while(ret != 0);
+#if WAIT_UNTR == 1
+    riscv_perf_cntr_end();
+#endif
+#if PREPARE_IN == 1
+    riscv_perf_cntr_begin();
+#endif
 }
 
 void init_enclave_queues() {

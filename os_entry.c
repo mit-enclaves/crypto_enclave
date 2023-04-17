@@ -248,7 +248,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
-      if(req_queue_is_full()) { 
+      if(!resp_queue_is_empty()) { 
 #if PREPARE_IN == 1
         riscv_perf_cntr_end();
 #endif
