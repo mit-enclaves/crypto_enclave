@@ -23,7 +23,12 @@ key_entry_t key_directory[SIZE_KEY_DIR] = {0};
 // Hack for now
 key_seed_t fake_randomness = {0};
 
+int flag = 1;
+
 void enclave_entry() {
+#if WAIT_ENC == 1
+  riscv_perf_cntr_begin();
+#endif
   queue_t * qreq = SHARED_REQU_QUEUE;
   queue_t * qres = SHARED_RESP_QUEUE;
 
@@ -38,6 +43,15 @@ void enclave_entry() {
     ret = pop(qreq, (void **) &m);
     if(ret != 0) continue;
     uint64_t key_id;
+    flag++;
+    if(flag >= 3) {
+#if WAIT_ENC == 1
+      riscv_perf_cntr_end();
+#endif
+#if PROCESSING == 1
+      riscv_perf_cntr_begin();
+#endif
+    }
     switch((m)->f) {
       case F_HASH:
         hash((const void *) m->args[0],
@@ -87,10 +101,6 @@ void enclave_entry() {
         break;
       
       case F_SIGN:
-#if TRANSFER == 1
-        riscv_perf_cntr_end();
-        sm_exit_enclave();
-#endif
 #if (DEBUG_ENCLAVE == 1)
         //printm("Signing ");
 #endif
@@ -129,9 +139,15 @@ void enclave_entry() {
         do {
           ret = push(qres, m);
         } while(ret != 0);
-        //riscv_perf_cntr_end();
-        // *** END BENCHMARK *** 
-        sm_exit_enclave();
+#if PROCESSING == 1
+        riscv_perf_cntr_end();
+#endif
+        do {
+          sm_exit_enclave();
+#if (DEBUG_ENCLAVE == 1)
+          printm("Had to try exiting again\n");
+#endif
+        } while(1);
       default:
         break;
     } 

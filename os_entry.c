@@ -20,7 +20,8 @@ extern uintptr_t enclave_end;
 #define STATE_2 3
 #define STATE_3 4
 
-#define NUM_SIGN 256 * 12
+//#define NUM_SIGN 256 * 12
+#define NUM_SIGN 256
 
 // INPUTS
 extern int len_a;
@@ -200,9 +201,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     printm("Enclave Enter\n");
 
     result = sm_enclave_enter(enclave_id, thread_id);
-#if TRANSFER == 1
-    send_exit_cmd(0);
-#endif
     test_completed();
   }
   else if (core_id == 1) {
@@ -240,57 +238,77 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       //}
     } while((ret != 0) || (m->f != F_GET_SIGN_PK));
 
+    printm("Sign\n");
     // *** BEGINING BENCHMARK ***
 #if TOTAL == 1
     riscv_perf_cntr_begin();
 #endif
-
-#if TRANSFER == 1
-        riscv_perf_cntr_begin();
+#if PREPARE_IN == 1
+    riscv_perf_cntr_begin();
 #endif
-    //printm("Sign\n");
+
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
+#if PREPARE_IN == 1
+        riscv_perf_cntr_end();
+#endif
+#if RECEIVE_OUT == 1
+        riscv_perf_cntr_begin();
+#endif
         do {
           ret = pop(qresp, (void **) &m);
         } while(!resp_queue_is_empty());
+#if RECEIVE_OUT == 1
+        riscv_perf_cntr_end();
+#endif
+#if PREPARE_IN == 1
+        riscv_perf_cntr_begin();
+#endif
       }
       sign(a[i%len_a], len_elements[i%len_a], key_id, &sigs[i]);
     }
 
-    //printm("Send Enclave Exit\n");
     enclave_exit();
-    
-    //printm("Done sending RPC\n");
+#if PREPARE_IN == 1
+        riscv_perf_cntr_end();
+#endif
+#if WAIT_UNTR == 1
+        riscv_perf_cntr_begin();
+#endif
 
     do {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_EXIT));
     
-    //printm("Last function %d\n", m->f); 
+#if WAIT_UNTR == 1
+    riscv_perf_cntr_end();
+#endif
 #if TOTAL == 1
     riscv_perf_cntr_end();
 #endif
     // *** END BENCHMARK *** 
  
     printm("Received enclave exit confirmation\n");
-    printm("End benchmark starts verification\n");
+    int cmd = 0;
 
 #if VERIFY == 1
+    printm("End benchmark starts verification\n");
+    
     riscv_perf_cntr_begin();
-#endif
+    
     bool res = true;
     for(int i = 0; i < NUM_SIGN; i++) {
       //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
       res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], pk);
     }
-#if VERIFY == 1
+    
     riscv_perf_cntr_end();
-#endif
+    
     printm("Verification %s\n", (res ? "is successful": "has failed"));
+    cmd = (res == true) ? 0: 1;
+#endif
 
     printm("End experiment\n");
-    int cmd = (res == true) ? 0: 1;
     send_exit_cmd(cmd);
     test_completed();
   }

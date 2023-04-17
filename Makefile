@@ -19,10 +19,18 @@ LDFLAGS := -nostartfiles -nostdlib -static
 ifeq ($(EXPERIMENT_N), 0)
 CFLAGS += -D TOTAL=1
 else ifeq ($(EXPERIMENT_N), 1)
-CFLAGS += -D SIGN=1
+CFLAGS += -D PREPARE_IN=1
 else ifeq ($(EXPERIMENT_N), 2)
-CFLAGS += -D TRANSFER=1
+CFLAGS += -D RECEIVE_OUT=1
 else ifeq ($(EXPERIMENT_N), 3)
+CFLAGS += -D WAIT_UNTR=1
+else ifeq ($(EXPERIMENT_N), 4)
+CFLAGS += -D WAIT_ENC=1
+else ifeq ($(EXPERIMENT_N), 5)
+CFLAGS += -D PROCESSING=1
+else ifeq ($(EXPERIMENT_N), 6)
+CFLAGS += -D SIGN=1
+else ifeq ($(EXPERIMENT_N), 7)
 CFLAGS += -D VERIFY=1
 endif
 
