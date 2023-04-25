@@ -136,12 +136,18 @@ void serve_requests() {
 #if SIGN == 1
         riscv_perf_cntr_begin();
 #endif
+        hash(
+            (const void *) m->args[0],
+            (const size_t) m->args[1],
+            (hash_t *) m->args[3]);
+        /*
         sign(
             (const void *) m->args[0],
             (const size_t) m->args[1],
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
             (signature_t *) m->args[3]);
+        */
 #if SIGN == 1
         riscv_perf_cntr_end();
 #endif

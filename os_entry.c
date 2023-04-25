@@ -32,7 +32,7 @@ extern int len_a;
 extern int len_elements[];
 extern char *a[];
 
-signature_t sigs[NUM_SIGN];
+hash_t sigs[NUM_SIGN];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
@@ -412,7 +412,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #if COPY_OUT == 1
               riscv_perf_cntr_begin();
 #endif
-              memcpy(&sigs[cnt_sig],  get_pa((void *)m->args[3]), sizeof(signature_t));
+              memcpy(&sigs[cnt_sig],  get_pa((void *)m->args[3]), sizeof(hash_t));
 #if COPY_OUT == 1
               riscv_perf_cntr_end();
 #endif
@@ -438,7 +438,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
         riscv_perf_cntr_begin();
 #endif
       }
-      signature_t *s_drw   = malloc(sizeof(signature_t));
+      hash_t *s_drw   = malloc(sizeof(hash_t));
       char *message_drw = malloc(sizeof(char) * len_elements[i%len_a]);
 #if COPY_IN == 1
       riscv_perf_cntr_begin();
@@ -486,7 +486,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #if COPY_OUT == 1
           riscv_perf_cntr_begin();
 #endif
-          memcpy(&sigs[cnt_sig],  get_pa((void *) m->args[3]), sizeof(signature_t));
+          memcpy(&sigs[cnt_sig],  get_pa((void *) m->args[3]), sizeof(hash_t));
 #if COPY_OUT == 1
           riscv_perf_cntr_end();
 #endif
