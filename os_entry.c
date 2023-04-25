@@ -233,9 +233,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     
     do {
       ret = pop(qresp, (void **) &m);
-      //if((ret == 0)) { //&& (m->f == F_VERIFY)) {
-        //printm("result\n"); // %d\n", m->ret);
-      //}
     } while((ret != 0) || (m->f != F_GET_SIGN_PK));
 
     printm("Sign\n");
@@ -267,6 +264,10 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       }
       sign(a[i%len_a], len_elements[i%len_a], key_id, &sigs[i]);
     }
+        
+    do {
+      ret = pop(qresp, (void **) &m);
+    } while(!resp_queue_is_empty());
 
     enclave_exit();
 #if PREPARE_IN == 1
