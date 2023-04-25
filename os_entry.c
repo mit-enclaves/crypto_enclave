@@ -303,21 +303,43 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     uint64_t *key_id_drw = malloc(sizeof(uint64_t));
     public_key_t *pk_drw   = malloc(sizeof(public_key_t));
     
+    msg_t *m;
+    queue_t *qresp = DRAWER_RESP_QUEUE;
+    int ret;
+    
     printm("Creat SK\n");
     create_signing_key_pair(NULL, get_va(key_id_drw));
     
     push_drawer_region(*enclave_id_ptr);
     pull_drawer_region();
     
+    do {
+      ret = pop(qresp, (void **) &m);
+      m = (msg_t *) get_pa(m);
+      if(ret != 0) continue;
+      //printm("RPC with f code %d has returned\n", m->f);
+      switch((m)->f) {
+        case F_CREATE_SIGN_K:
+          memcpy(&key_id, get_pa((void *) m->args[1]), sizeof(uint64_t));
+          free(get_pa((void *) m->args[1]));
+          free(m);
+          break;
+        case F_GET_SIGN_PK:
+          memcpy(&pk, get_pa((void *) m->args[1]), sizeof(public_key_t));
+          free(get_pa((void *) m->args[1]));
+          free(m);
+          break;
+        default:
+          printm("Received unexpected return value\n");
+          break;
+      } 
+    } while(!resp_queue_is_empty());
+    
     printm("Get PK %d\n", *key_id_drw);
     get_public_signing_key(*key_id_drw, get_va(pk_drw));
     
     push_drawer_region(*enclave_id_ptr);
     pull_drawer_region();
-    
-    msg_t *m;
-    queue_t *qresp = DRAWER_RESP_QUEUE;
-    int ret;
     
     do {
       ret = pop(qresp, (void **) &m);
