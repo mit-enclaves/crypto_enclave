@@ -28,7 +28,7 @@ extern int len_a;
 extern int len_elements[];
 extern char *a[];
 
-signature_t sigs[NUM_SIGN];
+hash_t sigs[NUM_SIGN];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
