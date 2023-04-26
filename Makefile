@@ -34,6 +34,12 @@ else ifeq ($(EXPERIMENT_N), 7)
 CFLAGS += -D VERIFY=1
 endif
 
+ifndef SIZE_Q 
+CFLAGS += -D SIZE_Q=2
+else
+CFLAGS += -D SIZE_Q=$(SIZE_Q)
+endif
+
 FLAGS_DEBUG_ENCLAVE :=
 ifeq ($(DEBUG_ENCLAVE), 1)
 FLAGS_DEBUG_ENCLAVE += -D DEBUG_ENCLAVE=1
