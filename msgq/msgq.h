@@ -3,7 +3,7 @@
 
 #include <platform_lock.h>
 
-#define SIZE_QUEUE 2
+#define SIZE_QUEUE SIZE_Q
 
 typedef struct queue_t {
   void *buf[SIZE_QUEUE];
