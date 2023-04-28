@@ -2,12 +2,12 @@
 #include <local_cryptography.h>
 
 // INPUTS
-#define NUM_SIGN 256 * 12
+#define NUM_SIGN 256
 extern int len_a;
 extern int len_elements[];
 extern char *a[];
 
-signature_t sigs[NUM_SIGN];
+hash_t sigs[NUM_SIGN];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   if(core_id == 0) {
@@ -24,7 +24,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     riscv_perf_cntr_begin();
 
     for(int i = 0; i < NUM_SIGN; i++) {
-      local_sign(a[i%len_a], len_elements[i%len_a], &pk, &sk, &sigs[i]);
+      local_hash(a[i%len_a], len_elements[i%len_a], &pk, &sk, &sigs[i]);
     }
 
     riscv_perf_cntr_end();
