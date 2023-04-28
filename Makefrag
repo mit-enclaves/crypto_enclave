@@ -41,7 +41,6 @@ ALL+=null_bootloader
 ## Common Among Tests
 
 # Binaries
-NULL_BOOT_BINARY := $(SM_BUILD_DIR)/null_boot.bin
 SM_BINARY := $(SM_BUILD_DIR)/sm.bin
 IDPT_BIN := $(BUILD_DIR)/idpt.bin
 
