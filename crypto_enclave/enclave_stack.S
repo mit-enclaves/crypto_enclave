@@ -4,5 +4,5 @@
 .align PAGE_SHIFT
 .globl enclave_stack_base, enclave_stack_ptr
 enclave_stack_base:
-  .skip (STACK_SIZE)
+  .skip (STACK_SIZE*2)
 enclave_stack_ptr:
