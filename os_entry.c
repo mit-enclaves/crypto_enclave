@@ -31,6 +31,9 @@ signature_t sigs[NUM_SIGN];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
+  
+  // Init Peterson's Lock library with core_id
+  init_p_lock_global(core_id);
 
   if(core_id == 0) {
     //uint64_t region1_id = addr_to_region_id((uintptr_t) &region1);

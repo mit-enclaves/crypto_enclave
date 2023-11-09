@@ -20,4 +20,19 @@ static inline bool platform_lock_state(platform_lock_t *lock) {
   return ((lock->lock_flag) != 0);
 }
 
+// Peterson's lock for Secure Shared Memory:
+
+typedef struct {
+  uint64_t flag[2];
+  uint64_t turn;
+  uint64_t _pad[5];
+} platform_p_lock_t;
+
+void init_p_lock_global(int core_id);
+
+// Implementation of Peterson's lock for two cores.
+void platform_p_lock_init(volatile platform_p_lock_t *lock);
+void platform_p_lock_acquire(volatile platform_p_lock_t *lock);
+void platform_p_lock_release(volatile platform_p_lock_t *lock);
+
 #endif // PLATFORM_LOCK_H

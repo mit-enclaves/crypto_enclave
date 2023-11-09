@@ -9,7 +9,7 @@ typedef struct queue_t {
   void *buf[SIZE_QUEUE];
   volatile int head;
   volatile int tail;
-  volatile platform_lock_t lock;
+  volatile platform_p_lock_t lock;
 } queue_t;
 
 void init_q(queue_t *q);
