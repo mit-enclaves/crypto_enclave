@@ -36,6 +36,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
   init_p_lock_global(core_id);
 
   if(core_id == 0) {
+    *flag = STATE_0;
+
     //uint64_t region1_id = addr_to_region_id((uintptr_t) &region1);
     uint64_t region2_id = addr_to_region_id((uintptr_t) &region2);
     uint64_t region3_id = addr_to_region_id((uintptr_t) &region3);
@@ -51,6 +53,17 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       printm("sm_region_block FAILED with error code %d\n\n", result);
       test_completed();
     }
+
+    printm("Region block\n");
+
+    result = sm_region_block(region2_id);
+    if(result != MONITOR_OK) {
+      printm("sm_region_block FAILED with error code %d\n\n", result);
+      test_completed();
+    }
+
+    *flag = STATE_1;
+    while(*flag != STATE_2);
 
     printm("Region free\n");
 
@@ -79,14 +92,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     result = sm_enclave_create(enclave_id, EVBASE, REGION_MASK, num_mailboxes, true);
     if(result != MONITOR_OK) {
       printm("sm_enclave_create FAILED with error code %d\n\n", result);
-      test_completed();
-    }
-
-    printm("Region block\n");
-
-    result = sm_region_block(region2_id);
-    if(result != MONITOR_OK) {
-      printm("sm_region_block FAILED with error code %d\n\n", result);
       test_completed();
     }
 
@@ -196,8 +201,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     }
 
     // Let other thread know we are ready
-    while(*flag != STATE_0);
-    *flag = STATE_1;
+    while(*flag != STATE_2);
+    *flag = STATE_3;
     asm volatile("fence");
 
     printm("Enclave Enter\n");
@@ -206,9 +211,15 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     test_completed();
   }
   else if (core_id == 1) {
-    *flag = STATE_0;
     asm volatile("fence");
-    while(*flag != STATE_1);
+    while(*flag != STATE_3) {
+      if(*flag == STATE_1) {
+       api_result_t res = sm_region_update();
+       if(res == MONITOR_OK) {
+        *flag = STATE_2;
+       }
+      }
+    };
 
     init_enclave_queues();
     
@@ -278,7 +289,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     test_completed();
   }
   else {
-    printm("Core n %d\n\n", core_id);
+    printm("Error, this code only works for 2 Cores.\n Core n %d\n\n", core_id);
+    send_exit_cmd(1);
     test_completed();
   }
 }
