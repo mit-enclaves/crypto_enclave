@@ -5,7 +5,7 @@ import random
 import string
 
 len_a = 256 * 12
-len_elements = [40, 40, 40, 40, 40, 40, 40, 576, 576, 576, 576, 1500]
+len_elements = [128*8, 40, 40, 40, 40, 40, 40, 576, 576, 576, 576, 1500]
 len_b = len(len_elements)
 
 def randStr(N, chars = string.hexdigits):

@@ -36,9 +36,6 @@ void enclave_entry() {
   printm("Made it here\n");
 #endif
 
-  // *** BEGINING BENCHMARK ***
-  //riscv_perf_cntr_begin();
-
   while(true) {
     ret = pop(qreq, (void **) &m);
     if(ret != 0) continue;
@@ -100,19 +97,18 @@ void enclave_entry() {
           m->ret = 1;
           break;
         }
-        size_t in_message_size;
-        memcpy(&in_message_size, &m->args[1], sizeof(size_t));
+
+        size_t in_message_size = m->args[1];
         char msg[1500];
         memcpy(&msg, (const void *) m->args[0], sizeof(char)* in_message_size);
 
-        signature_t out_signature;
         sign(
+            //(const void *) m->args[0],
             &msg,
             in_message_size,
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
-            &out_signature);
-        memcpy((signature_t *) m->args[3], &out_signature, sizeof(signature_t));
+            (signature_t *) m->args[3]);
         m->ret = 0;
         break;
 

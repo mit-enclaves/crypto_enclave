@@ -12,6 +12,9 @@
 #include "fixedint.h"
 #include "sha512.h"
 
+#define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
+#define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
+
 /* the K array */
 static const uint64_t K[80] = {
     UINT64_C(0x428a2f98d728ae22), UINT64_C(0x7137449123ef65cd), 
@@ -74,6 +77,12 @@ static const uint64_t K[80] = {
          (((uint64_t)((y)[4] & 255))<<24)|(((uint64_t)((y)[5] & 255))<<16) | \
          (((uint64_t)((y)[6] & 255))<<8)|(((uint64_t)((y)[7] & 255))); }
 
+static inline uint64_t swap_uint64( uint64_t val )
+{
+    val = ((val << 8) & 0xFF00FF00FF00FF00ULL ) | ((val >> 8) & 0x00FF00FF00FF00FFULL );
+    val = ((val << 16) & 0xFFFF0000FFFF0000ULL ) | ((val >> 16) & 0x0000FFFF0000FFFFULL );
+    return (val << 32) | (val >> 32);
+}
 
 #define Ch(x,y,z)       (z ^ (x & (y ^ z)))
 #define Maj(x,y,z)      (((x | y) & z) | (x & y)) 
@@ -99,9 +108,11 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
     }
 
     /* copy the state into 1024-bits into W[0..15] */
+    riscv_perf_cntr_begin();
     for (i = 0; i < 16; i++) {
-        LOAD64H(W[i], buf + (8*i));
+        W[i] = swap_uint64(*((uint64_t *) buf + (8*i)));
     }
+    riscv_perf_cntr_end();
 
     /* fill W[16..79] */
     for (i = 16; i < 80; i++) {
