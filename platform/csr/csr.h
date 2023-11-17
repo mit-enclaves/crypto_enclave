@@ -43,5 +43,7 @@
 // ### Protection Agaisnt Side Channels
 #define CSR_MFLUSH 0x7c9
 #define CSR_MSPEC  0x7ca
+#define CSR_SSPEC  0x190
+#define CSR_SPEC   0x802
 
 #endif // CSR_H
