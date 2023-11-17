@@ -35,6 +35,7 @@ CRYPTO_ENCLAVE_SRC := \
   $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/verify.c \
   $(QUEUE_SRC_DIR)/msgq.c \
   $(PLATFORM_DIR)/platform_lock.c \
+  $(PLATFORM_DIR)/platform_control_spec.c \
 
 ifeq ($(DEBUG_ENCLAVE), 1)
 CRYPTO_ENCLAVE_SRC += $(INFRA_DIR)/sbi/console.c

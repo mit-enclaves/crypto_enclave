@@ -11,6 +11,7 @@
 
 #include "fixedint.h"
 #include "sha512.h"
+#include <platform_control_spec.h>
 
 #define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
 #define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
@@ -109,9 +110,11 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
 
     /* copy the state into 1024-bits into W[0..15] */
     riscv_perf_cntr_begin();
+    platform_disable_predictors();
     for (i = 0; i < 16; i++) {
         W[i] = swap_uint64(*((uint64_t *) buf + (8*i)));
     }
+    platform_enable_predictors();
     riscv_perf_cntr_end();
 
     /* fill W[16..79] */

@@ -1,6 +1,7 @@
 #ifndef SM_PARAMETERS_H
 #define SM_PARAMETERS_H
 
+#include <csr/csr.h>
 
 // SM Parameters:
 // --------------
@@ -10,7 +11,6 @@
 
 #define MAILBOX_SIZE  (0x100)
 #define NUM_UNTRUSTED_MAILBOXES (8)
-#define CLEAN_REGIONS_MEMSET   (false)
 
 // Stack Parameter
 #define STACK_SIZE          (0x1000)
@@ -25,24 +25,37 @@
 #define HTIF_LEN        0x10
 
 // Placement of SM in memory
-#define SM_ADDR         0x80000000
-#define HANDLER_LEN         0x4000
-#define SM_LEN             0x20000
+#define SM_ADDR         0x80000000 // Should be region aligned
+#define HANDLER_LEN         0x8000 // Should be a power of 2
+#define SM_LEN             0x30000
 
-#define SM_STATE_ADDR   0x80030000
+#define SM_STATE_ADDR   0x80040000
 #define SM_STATE_LEN        0x3000
+
+#define SM_LAST_ADDRESS (SM_STATE_ADDR + SM_STATE_LEN)
 
 #define UNTRUSTED_ENTRY  0x82000000
 #define PAYLOAD_MAXLEN    0xC000000
 
-// Machine configuration
+//// Machine configuration
+
+// Number of Cores
+#define NUM_CORES (2)
+#define MAX_HARTS NUM_CORES
+
+// Memory
 #define RAM_BASE        0x80000000
 #define RAM_SIZE        0x80000000
 
 #define REGION_SHIFT  (25)
 
-#define MAX_HARTS 2
-#define NUM_CORES     (2)
+// MSPEC configuration
+#define MSPEC_ALL    (0)
+#define MSPEC_NONMEM (1)
+#define MSPEC_NONE   (3)
+#define MSPEC_NOTRAINPRED (4)
+#define MSPEC_NOUSEPRED (8)
+#define MSPEC_NOUSEL1 (16)
 
 // SATP configuration
 #define SATP_MODE_SV39 (8ul)
