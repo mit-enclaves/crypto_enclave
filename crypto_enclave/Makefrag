@@ -36,6 +36,7 @@ CRYPTO_ENCLAVE_SRC := \
   $(QUEUE_SRC_DIR)/msgq.c \
   $(PLATFORM_DIR)/platform_lock.c \
   $(PLATFORM_DIR)/platform_control_spec.c \
+  $(INFRA_DIR)/clib/memset.c \
 
 ifeq ($(DEBUG_ENCLAVE), 1)
 CRYPTO_ENCLAVE_SRC += $(INFRA_DIR)/sbi/console.c

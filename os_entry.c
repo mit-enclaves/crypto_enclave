@@ -20,7 +20,11 @@ extern uintptr_t enclave_end;
 #define STATE_2 3
 #define STATE_3 4
 
+#if (SIZE == 1)
 #define NUM_SIGN 1
+#else
+#define NUM_SIGN 256*12
+#endif
 
 // INPUTS
 extern int len_a;
@@ -253,7 +257,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 
     printm("Sign\n");
     // *** BEGINING BENCHMARK ***
-    //riscv_perf_cntr_begin();
+#if (MEASURE == 2)
+    riscv_perf_cntr_begin();
+#endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
@@ -269,13 +275,17 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     do {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_EXIT));
-    
-    //riscv_perf_cntr_end();
+
+#if (MEASURE == 2) 
+    riscv_perf_cntr_end();
+#endif
     // *** END BENCHMARK *** 
  
     printm("Received enclave exit confirmation\n");
-    /*
+    
     bool res = true;
+
+#if (VERIFY == 1) 
     printm("End benchmark starts verification\n");
 
     for(int i = 0; i < NUM_SIGN; i++) {
@@ -283,11 +293,10 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], pk);
     }
     printm("Verification %s\n", (res ? "is successful": "has failed"));
-    */
+#endif
 
     printm("End experiment\n");
-    //int cmd = (res == true) ? 0: 1;
-    int cmd = 0;
+    int cmd = (res == true) ? 0: 1;
     send_exit_cmd(cmd);
     test_completed();
   }

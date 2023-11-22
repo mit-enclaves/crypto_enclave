@@ -16,6 +16,46 @@ DEBUG_FLAGS := -ggdb3
 CFLAGS := -march=rv64g -mcmodel=medany -mabi=lp64 -fno-common -fno-tree-loop-distribute-patterns -std=gnu11 -Wall -O3 $(DEBUG_FLAGS)
 LDFLAGS := -nostartfiles -nostdlib -static
 
+ifeq ($(SIZE), SMALL)
+CFLAGS += -D SIZE=1
+else
+CFLAGS += -D SIZE=2
+endif
+
+ifeq ($(BURST), ALL)
+CFLAGS += -D BURST=1
+else ifeq ($(BURST), LOAD)
+CFLAGS += -D BURST=2
+endif
+
+ifeq ($(MODE), COPY)
+CFLAGS += -D MODE=1
+else
+CFLAGS += -D MODE=2
+endif
+
+ifeq ($(ENDIAN), SWAP)
+CFLAGS += -D ENDIAN=1
+else ifeq ($(ENDIAN), LOAD)
+CFLAGS += -D ENDIAN=2
+else
+	$(error ENDIAN should be set to SWAP or LOAD)
+endif
+
+ifeq ($(MEASURE), LOAD)
+CFLAGS += -D MEASURE=1
+else ifeq ($(MEASURE), ALL)
+CFLAGS += -D MEASURE=2
+else
+CFLAGS += -D MEASURE=3
+endif
+
+ifeq ($(VERIFY), YES)
+CFLAGS += -D VERIFY=1
+else
+CFLAGS += -D VERIFY=2
+endif
+
 FLAGS_DEBUG_ENCLAVE :=
 ifeq ($(DEBUG_ENCLAVE), 1)
 FLAGS_DEBUG_ENCLAVE += -D DEBUG_ENCLAVE=1

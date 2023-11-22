@@ -109,13 +109,25 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
     }
 
     /* copy the state into 1024-bits into W[0..15] */
+#if (MEASURE == 1)
     riscv_perf_cntr_begin();
+#endif
+#if (BURST == 2)
     platform_disable_predictors();
+#endif
     for (i = 0; i < 16; i++) {
+#if (ENDIAN == 1)
         W[i] = swap_uint64(*((uint64_t *) buf + (8*i)));
+#elif (ENDIAN == 2)
+        LOAD64H(W[i], buf + (8*i));
+#endif
     }
+#if (BURST == 2)
     platform_enable_predictors();
+#endif
+#if (MEASURE == 1)
     riscv_perf_cntr_end();
+#endif
 
     /* fill W[16..79] */
     for (i = 16; i < 80; i++) {

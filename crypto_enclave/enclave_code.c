@@ -3,6 +3,7 @@
 #include "clib.h"
 #include <msgq.h>
 #include <crypto_enclave_util.h>
+#include <platform_control_spec.h>
 
 #define SHARED_MEM_REG (0x8a000000)
 #define SHARED_REQU_QUEUE ((queue_t *) SHARED_MEM_REG)
@@ -12,18 +13,18 @@
 #include "../sbi/console.h"
 #endif
 
-
 #define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
 #define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
 
-#define SIZE_KEY_DIR 64
-
-key_entry_t key_directory[SIZE_KEY_DIR] = {0};
+#define SIZE_KEY_DIR 1
 
 // Hack for now
 key_seed_t fake_randomness = {0};
 
 void enclave_entry() {
+#if (BURST == 1)
+    platform_disable_predictors();
+#endif
   queue_t * qreq = SHARED_REQU_QUEUE;
   queue_t * qres = SHARED_RESP_QUEUE;
 
@@ -31,10 +32,8 @@ void enclave_entry() {
   int ret;
 
   init_p_lock_global(0);
-
-#if (DEBUG_ENCLAVE == 1)
-  printm("Made it here\n");
-#endif
+  
+  key_entry_t key_directory[SIZE_KEY_DIR] = {0};
 
   while(true) {
     ret = pop(qreq, (void **) &m);
@@ -89,9 +88,6 @@ void enclave_entry() {
         break;
       
       case F_SIGN:
-#if (DEBUG_ENCLAVE == 1)
-        //printm("Signing\n");
-#endif
         key_id =  m->args[2];
         if(!key_directory[key_id].init) {
           m->ret = 1;
@@ -99,12 +95,17 @@ void enclave_entry() {
         }
 
         size_t in_message_size = m->args[1];
+#if (MODE == 1)
         char msg[1500];
         memcpy(&msg, (const void *) m->args[0], sizeof(char)* in_message_size);
+#endif
 
         sign(
-            //(const void *) m->args[0],
+#if (MODE == 2)
+            (const void *) m->args[0],
+#elif (MODE == 1)
             &msg,
+#endif
             in_message_size,
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
@@ -127,6 +128,9 @@ void enclave_entry() {
         do {
           ret = push(qres, m);
         } while(ret != 0);
+#if (BURST == 1)
+        platform_enable_predictors();
+#endif
         while(1) {
           sm_exit_enclave();
         }
