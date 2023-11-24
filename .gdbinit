@@ -5,7 +5,7 @@ foc cmd
 set trace-commands on
 set logging on
 target remote localhost:1234
-symbol-file ../secure_shared_memory/build/sm.elf
-add-symbol-file ../secure_shared_memory/build/sm.enclave.elf 0x86002000
+symbol-file ../security_monitor/build/sm.elf
+add-symbol-file ../security_monitor/build/sm.enclave.elf 0x86002000
 add-symbol-file build/crypto_enclave.elf 0x20000000
 add-symbol-file build/payload.elf 0x82000000
