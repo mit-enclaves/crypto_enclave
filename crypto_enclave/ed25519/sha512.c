@@ -12,6 +12,7 @@
 #include "fixedint.h"
 #include "sha512.h"
 #include <platform_control_spec.h>
+#include "../../sbi/console.h"
 
 #define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
 #define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
@@ -117,7 +118,7 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
 #endif
     for (i = 0; i < 16; i++) {
 #if (ENDIAN == 1)
-        W[i] = swap_uint64(*((uint64_t *) buf + (8*i)));
+        W[i] = swap_uint64(*((uint64_t *) (buf + (8*i))));
 #elif (ENDIAN == 2)
         LOAD64H(W[i], buf + (8*i));
 #endif
