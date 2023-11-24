@@ -66,6 +66,12 @@ ifeq ($(MEASURE), LOAD)
 CFLAGS += -D MEASURE=1
 else ifeq ($(MEASURE), ALL)
 CFLAGS += -D MEASURE=2
+else ifeq ($(MEASURE), SIGN)
+CFLAGS += -D MEASURE=2
+else ifeq ($(MEASURE), NOT_SIGN)
+CFLAGS += -D MEASURE=2
+else ifeq ($(MEASURE), ALL)
+CFLAGS += -D MEASURE=2
 else
 $(error MEASURE should be set to LOAD or ALL)	
 endif
