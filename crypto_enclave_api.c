@@ -9,7 +9,8 @@ void hash(const void * in_data,
   msg_t *msg = malloc(sizeof(msg_t));
   msg->f = F_HASH;
   msg->args[0] = (uintptr_t) in_data;
-  msg->args[1] = (uintptr_t) out_hash;
+  msg->args[1] = (uintptr_t) in_data_size;
+  msg->args[2] = (uintptr_t) out_hash;
   int ret;
   do {
     ret = push(q, msg);

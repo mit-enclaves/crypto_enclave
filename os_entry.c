@@ -31,7 +31,7 @@ extern int len_a;
 extern int len_elements[];
 extern char *a[];
 
-signature_t sigs[NUM_SIGN];
+hash_t hashs[NUM_SIGN];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
@@ -267,7 +267,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
           ret = pop(qresp, (void **) &m);
         } while(!resp_queue_is_empty());
       }
-      sign(a[i%len_a], len_elements[i%len_a], key_id, &sigs[i]);
+      hash(a[i%len_a], len_elements[i%len_a], &hashs[i]);
     }
 
     enclave_exit();
@@ -286,13 +286,11 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     bool res = true;
 
 #if (VERIFY == 1) 
-    printm("End benchmark starts verification\n");
+    printm("End benchmark print hashs\n");
 
     for(int i = 0; i < NUM_SIGN; i++) {
-      //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
-      res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], pk);
+      printm("hahs[%x] %d\n", i, hashs[i].bytes[0]);
     }
-    printm("Verification %s\n", (res ? "is successful": "has failed"));
 #endif
 
     printm("End experiment\n");

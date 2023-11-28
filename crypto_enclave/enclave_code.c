@@ -40,10 +40,18 @@ void enclave_entry() {
     if(ret != 0) continue;
     uint64_t key_id;
     switch((m)->f) {
-      case F_HASH:
-        hash((const void *) m->args[0],
+      case F_SIGN:
+        key_id =  m->args[2];
+        if(!key_directory[key_id].init) {
+          m->ret = 1;
+          break;
+        }
+
+        sign((const void *) m->args[0],
             (size_t) m->args[1],
-            (hash_t *) m->args[2]);
+            &key_directory[key_id].pk,
+            &key_directory[key_id].sk,
+            (signature_t *) m->args[3]);
         m->ret = 0;
         break;
 
@@ -87,13 +95,7 @@ void enclave_entry() {
         m->ret = 0;
         break;
       
-      case F_SIGN:
-        key_id =  m->args[2];
-        if(!key_directory[key_id].init) {
-          m->ret = 1;
-          break;
-        }
-
+      case F_HASH:
         size_t in_message_size = m->args[1];
 #if (MODE == 1)
         char msg[1500];
@@ -102,16 +104,15 @@ void enclave_entry() {
 #if (MEASURE == 3)
         riscv_perf_cntr_begin();
 #endif
-        sign(
+        hash(
 #if (MODE == 2)
             (const void *) m->args[0],
 #elif (MODE == 1)
             &msg,
 #endif
             in_message_size,
-            &key_directory[key_id].pk,
-            &key_directory[key_id].sk,
-            (signature_t *) m->args[3]);
+            (hash_t *) m->args[2]);
+
 #if (MEASURE == 3)
         riscv_perf_cntr_end();
 #endif            
