@@ -34,11 +34,12 @@ CFLAGS += -D BURST=1
 else ifeq ($(BURST), LOAD)
 CFLAGS += -D BURST=2
 else ifeq ($(BURST), NO)
-CFLAGS += 
+CFLAGS += -D BURST=0
 else
 $(error BURST can be set to ALL, LOAD or NO)
 endif
-CFLAGS += 
+else
+CFLAGS += -D BURST=0
 endif
 
 ifdef MODE
