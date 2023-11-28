@@ -38,6 +38,7 @@ CFLAGS +=
 else
 $(error BURST can be set to ALL, LOAD or NO)
 endif
+CFLAGS += 
 endif
 
 ifdef MODE
@@ -52,7 +53,7 @@ else
 CFLAGS += -D MODE=2	
 endif
 
-
+ifdef ENDIAN
 ifeq ($(ENDIAN), SWAP)
 CFLAGS += -D ENDIAN=1
 else ifeq ($(ENDIAN), LOAD)
@@ -60,23 +61,22 @@ CFLAGS += -D ENDIAN=2
 else
 $(error ENDIAN should be set to SWAP or LOAD)
 endif
+else
+CFLAGS += -D ENDIAN=2
+endif
 
 ifdef MEASURE
 ifeq ($(MEASURE), LOAD)
 CFLAGS += -D MEASURE=1
 else ifeq ($(MEASURE), ALL)
 CFLAGS += -D MEASURE=2
-else ifeq ($(MEASURE), SIGN)
-CFLAGS += -D MEASURE=2
-else ifeq ($(MEASURE), NOT_SIGN)
-CFLAGS += -D MEASURE=2
-else ifeq ($(MEASURE), ALL)
-CFLAGS += -D MEASURE=2
+else ifeq ($(MEASURE), CRYPTO)
+CFLAGS += -D MEASURE=3
 else
 $(error MEASURE should be set to LOAD or ALL)	
 endif
 else
-CFLAGS += -D MEASURE=3
+CFLAGS += -D MEASURE=2
 endif
 
 ifdef VERIFY
