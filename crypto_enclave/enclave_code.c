@@ -36,8 +36,16 @@ void enclave_entry() {
   key_entry_t key_directory[SIZE_KEY_DIR] = {0};
 
   while(true) {
-    ret = pop(qreq, (void **) &m);
-    if(ret != 0) continue;
+#if (MEASURE == 5)
+    riscv_perf_cntr_begin();
+#endif
+    do {
+      ret = pop(qreq, (void **) &m);
+    }while (ret != 0);
+#if (MEASURE == 5)
+    riscv_perf_cntr_end();
+#endif
+
     uint64_t key_id;
     switch((m)->f) {
       case F_SIGN:
@@ -138,14 +146,8 @@ void enclave_entry() {
         break;
     } 
     m->done = true;
-#if (MEASURE == 5)
-    riscv_perf_cntr_begin();
-#endif
     do {
       ret = push(qres, m);
     } while(ret != 0);
-#if (MEASURE == 5)
-    riscv_perf_cntr_end();
-#endif
   }
 }
