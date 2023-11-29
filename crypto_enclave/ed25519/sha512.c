@@ -110,6 +110,9 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
     }
 
     /* copy the state into 1024-bits into W[0..15] */
+#if (MEASURE == 4)
+    riscv_perf_cntr_end();
+#endif
 #if (MEASURE == 1)
     riscv_perf_cntr_begin();
 #endif
@@ -130,6 +133,9 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
 #endif
 #if (MEASURE == 1)
     riscv_perf_cntr_end();
+#endif
+#if (MEASURE == 4)
+    riscv_perf_cntr_begin();
 #endif
 
     /* fill W[16..79] */

@@ -286,6 +286,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #if (MEASURE == 2)
     riscv_perf_cntr_begin();
 #endif
+#if (MEASURE == 4)
+    riscv_perf_cntr_begin();
+#endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
@@ -302,6 +305,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_EXIT));
 
+#if (MEASURE == 4) 
+    riscv_perf_cntr_end();
+#endif
 #if (MEASURE == 2) 
     riscv_perf_cntr_end();
 #endif

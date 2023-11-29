@@ -73,6 +73,8 @@ else ifeq ($(MEASURE), ALL)
 CFLAGS += -D MEASURE=2
 else ifeq ($(MEASURE), CRYPTO)
 CFLAGS += -D MEASURE=3
+else ifeq ($(MEASURE), ANTI_CRYPTO)
+CFLAGS += -D MEASURE=4
 else
 $(error MEASURE should be set to LOAD or ALL)	
 endif
