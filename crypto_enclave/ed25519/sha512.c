@@ -116,6 +116,10 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
 #if (MEASURE == 1)
     riscv_perf_cntr_begin();
 #endif
+#if (BURST == 0)
+    clear_csr(CSR_SPEC, MSPEC_NOTRAINPRED);
+    clear_csr(CSR_SPEC, MSPEC_NOUSEPRED);
+#endif
 #if (BURST == 2)
     set_csr(CSR_SPEC, MSPEC_NOTRAINPRED);
     set_csr(CSR_SPEC, MSPEC_NOUSEPRED);
@@ -127,10 +131,8 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
         LOAD64H(W[i], buf + (8*i));
 #endif
     }
-#if (BURST == 2)
     clear_csr(CSR_SPEC, MSPEC_NOTRAINPRED);
     clear_csr(CSR_SPEC, MSPEC_NOUSEPRED);
-#endif
 #if (MEASURE == 1)
     riscv_perf_cntr_end();
 #endif
