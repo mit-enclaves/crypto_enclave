@@ -138,8 +138,14 @@ void enclave_entry() {
         break;
     } 
     m->done = true;
+#if (MEASURE == 5)
+    riscv_perf_cntr_begin();
+#endif
     do {
       ret = push(qres, m);
     } while(ret != 0);
+#if (MEASURE == 5)
+    riscv_perf_cntr_end();
+#endif
   }
 }

@@ -75,6 +75,8 @@ else ifeq ($(MEASURE), CRYPTO)
 CFLAGS += -D MEASURE=3
 else ifeq ($(MEASURE), ANTI_LOAD)
 CFLAGS += -D MEASURE=4
+else ifeq ($(MEASURE), WAIT)
+CFLAGS += -D MEASURE=5
 else
 $(error MEASURE should be set to LOAD or ALL)	
 endif
