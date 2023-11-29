@@ -2,7 +2,7 @@
 #include <local_cryptography.h>
 
 // INPUTS
-#define NUM_SIGN 256
+#define NUM_SIGN 256 * 12
 extern int len_a;
 extern int len_elements[];
 extern char *a[];
