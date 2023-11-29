@@ -101,9 +101,6 @@ void enclave_entry() {
         char msg[1500];
         memcpy(&msg, (const void *) m->args[0], sizeof(char)* in_message_size);
 #endif
-#if (MEASURE == 3)
-        riscv_perf_cntr_begin();
-#endif
         hash(
 #if (MODE == 2)
             (const void *) m->args[0],
@@ -113,9 +110,6 @@ void enclave_entry() {
             in_message_size,
             (hash_t *) m->args[2]);
 
-#if (MEASURE == 3)
-        riscv_perf_cntr_end();
-#endif            
         m->ret = 0;
         break;
 

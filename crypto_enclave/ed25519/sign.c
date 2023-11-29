@@ -3,8 +3,13 @@
 #include "ge.h"
 #include "sc.h"
 
+#define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
+#define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
 
 void ed25519_sign(unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key, const unsigned char *private_key) {
+#if (MEASURE == 3)
+        riscv_perf_cntr_begin();
+#endif
     sha512_context hash;
     unsigned char hram[64];
     unsigned char r[64];
@@ -28,4 +33,7 @@ void ed25519_sign(unsigned char *signature, const unsigned char *message, size_t
 
     sc_reduce(hram);
     sc_muladd(signature + 32, hram, private_key, r);
+#if (MEASURE == 3)
+        riscv_perf_cntr_end();
+#endif            
 }
