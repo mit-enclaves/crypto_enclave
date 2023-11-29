@@ -114,7 +114,8 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
     riscv_perf_cntr_begin();
 #endif
 #if (BURST == 2)
-    platform_disable_predictors();
+    set_csr(CSR_SPEC, MSPEC_NOTRAINPRED);
+    set_csr(CSR_SPEC, MSPEC_NOUSEPRED);
 #endif
     for (i = 0; i < 16; i++) {
 #if (ENDIAN == 1)
@@ -124,7 +125,8 @@ static int sha512_compress(sha512_context *md, unsigned char *buf)
 #endif
     }
 #if (BURST == 2)
-    platform_enable_predictors();
+    clear_csr(CSR_SPEC, MSPEC_NOTRAINPRED);
+    clear_csr(CSR_SPEC, MSPEC_NOUSEPRED);
 #endif
 #if (MEASURE == 1)
     riscv_perf_cntr_end();
