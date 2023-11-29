@@ -291,7 +291,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
-      if(req_queue_is_full()) { 
+      if(req_queue_is_full()) {
+	printm("Queue is full!!\n"); 
         do {
           ret = pop(qresp, (void **) &m);
         } while(!resp_queue_is_empty());
@@ -320,8 +321,12 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #if (VERIFY == 1) 
     printm("End benchmark print hashs\n");
 
-    for(int i = 0; i < NUM_SIGN; i++) {
-      printm("hahs[%x] %d\n", i, hashs[i].bytes[0]);
+    for(int i = 1024; i < 1027; i++) {
+	      printm("hahs[%x] {", i);
+	for(int j = 0; j < 64; j++) {
+	      printm("%x,", hashs[i].bytes[j]);
+	}
+	      printm("}\n");
     }
 #endif
 
