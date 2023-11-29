@@ -99,9 +99,6 @@ void enclave_entry() {
         char msg[1500];
         memcpy(&msg, (const void *) m->args[0], sizeof(char)* in_message_size);
 #endif
-#if (MEASURE == 3)
-        riscv_perf_cntr_begin();
-#endif
         sign(
 #if (MODE == 2)
             (const void *) m->args[0],
@@ -112,9 +109,6 @@ void enclave_entry() {
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
             (signature_t *) m->args[3]);
-#if (MEASURE == 3)
-        riscv_perf_cntr_end();
-#endif            
         m->ret = 0;
         break;
 
