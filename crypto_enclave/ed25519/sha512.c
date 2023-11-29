@@ -301,10 +301,16 @@ return 0;
 
 int sha512(const unsigned char *message, size_t message_len, unsigned char *out)
 {
+#if (MEASURE == 3)
+    riscv_perf_cntr_begin();
+#endif
     sha512_context ctx;
     int ret;
     if ((ret = sha512_init(&ctx))) return ret;
     if ((ret = sha512_update(&ctx, message, message_len))) return ret;
     if ((ret = sha512_final(&ctx, out))) return ret;
     return 0;
+#if (MEASURE == 3)
+    riscv_perf_cntr_end();
+#endif            
 }

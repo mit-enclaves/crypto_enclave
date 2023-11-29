@@ -84,7 +84,7 @@ PAYLOAD_SRC := \
 	$(INFRA_DIR)/ed25519/sc.c \
 	$(INFRA_DIR)/ed25519/ge.c \
 	$(INFRA_DIR)/ed25519/fe.c \
-  $(QUEUE_SRC_DIR)/msgq.c \
+    $(QUEUE_SRC_DIR)/msgq.c \
 	$(PLATFORM_DIR)/idpt.S \
 	$(PLATFORM_DIR)/htif_for_linking.c \
 	$(PLATFORM_DIR)/platform_lock.c \
