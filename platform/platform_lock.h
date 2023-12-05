@@ -23,8 +23,8 @@ static inline bool platform_lock_state(platform_lock_t *lock) {
 // Peterson's lock for Secure Shared Memory:
 
 typedef struct {
-  uint64_t flag[2];
-  uint64_t turn;
+  volatile uint64_t flag[2];
+  volatile uint64_t turn;
   uint64_t _pad[5];
 } platform_p_lock_t;
 
