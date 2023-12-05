@@ -7,14 +7,18 @@
 #include <stdbool.h>
 #include <platform_lock.h>
 
-static volatile platform_lock_t putstring_lock;
+static volatile platform_lock_t console_lock;
+
+void console_init(){
+  platform_lock_release(&console_lock);
+}
 
 void putstring(const char* s)
 {
-  while(!platform_lock_acquire(&putstring_lock)) {};
+  while(!platform_lock_acquire(&console_lock)) {};
   while (*s)
     console_putchar(*s++);
-  platform_lock_release(&putstring_lock);
+  platform_lock_release(&console_lock);
 }
 
 int vsnprintf(char* out, size_t n, const char* s, va_list vl)
@@ -61,6 +65,32 @@ int vsnprintf(char* out, size_t n, const char* s, va_list vl)
               num = va_arg(vl, long long);
           else
               num = va_arg(vl, int);
+          if (num < 0) {
+            num = -num;
+            if (++pos < n) out[pos-1] = '-';
+          }
+          long digits = 1;
+          for (long long nn = num; nn /= 10; digits++)
+            ;
+          for (int i = digits-1; i >= 0; i--) {
+            if (pos + i + 1 < n) out[pos + i] = '0' + (num % 10);
+            num /= 10;
+          }
+          pos += digits;
+          longarg = false;
+          longlongarg = false;
+          format = false;
+          break;
+        }
+        case 'u':
+        {
+          unsigned long long num;
+          if (longarg)
+              num = va_arg(vl, unsigned long);
+          else if (longlongarg)
+              num = va_arg(vl, unsigned long long);
+          else
+              num = va_arg(vl, unsigned int);
           if (num < 0) {
             num = -num;
             if (++pos < n) out[pos-1] = '-';

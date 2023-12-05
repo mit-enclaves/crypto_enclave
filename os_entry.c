@@ -35,6 +35,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
   // Init Peterson's Lock library with core_id
   init_p_lock_global(core_id);
 
+  console_init();
+
   if(core_id == 0) {
     *flag = STATE_0;
 
