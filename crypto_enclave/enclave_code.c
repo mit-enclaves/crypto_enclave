@@ -3,6 +3,7 @@
 #include "clib.h"
 #include <msgq.h>
 #include <crypto_enclave_util.h>
+#include <platform_control_spec.h>
 
 #if (DEBUG_ENCLAVE == 1)
 #include "../sbi/console.h"
@@ -19,13 +20,10 @@ void serve_requests();
 #include "../sbi/console.h"
 #endif
 
-
 #define riscv_perf_cntr_begin() asm volatile("csrwi 0x801, 1")
 #define riscv_perf_cntr_end() asm volatile("csrwi 0x801, 0")
 
-#define SIZE_KEY_DIR 64
-
-key_entry_t key_directory[SIZE_KEY_DIR] = {0};
+#define SIZE_KEY_DIR 1
 
 // Hack for now
 key_seed_t fake_randomness = {0};
@@ -39,14 +37,19 @@ void enclave_entry() {
 
   while(1) {
     
+    printm("Will block\n");
     do {
     result = sm_region_block(drawer_region_id);
     } while ((result == MONITOR_CONCURRENT_CALL) || (result == MONITOR_INVALID_STATE));
     if (result != MONITOR_OK) {
+      printm("Panics %d\n", result);
       while(1); // PANIC
     }
+    printm("Has blocked\n");
 
+    
     do {
+      result = sm_region_update();
       result = sm_region_check_owned(drawer_region_id);
     } while(result != MONITOR_OK);
 
@@ -56,6 +59,9 @@ void enclave_entry() {
 }
 
 void serve_requests() {
+#if (BURST == 1)
+    platform_disable_predictors();
+#endif
   queue_t * qreq = DRAWER_REQU_QUEUE;
   queue_t * qres = DRAWER_RESP_QUEUE;
 
@@ -64,6 +70,9 @@ void serve_requests() {
 
   // *** BEGINING BENCHMARK ***
   //riscv_perf_cntr_begin();
+  init_p_lock_global(0);
+  
+  key_entry_t key_directory[SIZE_KEY_DIR] = {0};
 
   while(!is_empty(qreq)) {
     ret = pop(qreq, (void **) &m);
@@ -118,17 +127,24 @@ void serve_requests() {
         break;
       
       case F_SIGN:
-#if (DEBUG_ENCLAVE == 1)
-        //printm("Signing\n");
-#endif
         key_id =  m->args[2];
         if(!key_directory[key_id].init) {
           m->ret = 1;
           break;
         }
+
+        size_t in_message_size = m->args[1];
+#if (MODE == 1)
+        char msg[1500];
+        memcpy(&msg, (const void *) m->args[0], sizeof(char)* in_message_size);
+#endif
         sign(
+#if (MODE == 2)
             (const void *) m->args[0],
-            (const size_t) m->args[1],
+#elif (MODE == 1)
+            &msg,
+#endif
+            in_message_size,
             &key_directory[key_id].pk,
             &key_directory[key_id].sk,
             (signature_t *) m->args[3]);
@@ -154,6 +170,9 @@ void serve_requests() {
         do {
           result = sm_region_block(DRAWER_MEM_REG_ID);
         } while(result != MONITOR_OK);
+#if (BURST == 1)
+        platform_enable_predictors();
+#endif
         while(1) {
           sm_exit_enclave();
         }

@@ -87,13 +87,14 @@ PAYLOAD_SRC := \
   $(QUEUE_SRC_DIR)/msgq.c \
 	$(PLATFORM_DIR)/idpt.S \
 	$(PLATFORM_DIR)/htif_for_linking.c \
+	$(PLATFORM_DIR)/platform_lock.c \
 	$(PLATFORM_DIR)/sm_keys.c \
 	$(PLATFORM_DIR)/sm_binary.S \
 	$(INFRA_DIR)/sbi/console.c \
 	$(INPUTS) \
 
 # Rules
-$(PAYLOAD_ELF): $(PAYLOAD_SRC) $(INFRA_LD) $(BUILD_DIR) $(SM_BINARY) $(CRYPTO_ENCLAVE_BIN) $(IDPT_BIN)
+$(PAYLOAD_ELF): $(check_bin_env) $(PAYLOAD_SRC) $(INFRA_LD) $(BUILD_DIR) $(SM_BINARY) $(CRYPTO_ENCLAVE_BIN) $(IDPT_BIN)
 	$(CC) $(CFLAGS) $(addprefix -I , $(INFRA_INCLUDES)) $(INFRA_LDFLAGS) -T $(INFRA_LD) $(PAYLOAD_SRC) -D IDPT_FILE=\"$(IDPT_BIN)\" -D ENCLAVE_BINARY_FILE=\"$(CRYPTO_ENCLAVE_BIN)\" -D SM_BINARY_FILE=\"$(SM_BINARY)\" -o $@
 
 .PHONY: untrusted_infra

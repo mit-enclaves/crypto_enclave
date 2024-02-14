@@ -24,7 +24,11 @@ extern uintptr_t enclave_end;
 void pull_drawer_region();
 void push_drawer_region(enclave_id_t enclave_id);
 
-#define NUM_SIGN 256 * 12
+#if (SIZE == 1)
+#define NUM_SIGN 1
+#else
+#define NUM_SIGN 256*12
+#endif
 
 // INPUTS
 extern int len_a;
@@ -36,16 +40,49 @@ signature_t sigs[NUM_SIGN];
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
   enclave_id_t *enclave_id_ptr = (enclave_id_t *) SHARED_MEM_SYNC + sizeof(int);
+  
+  // Init Peterson's Lock library with core_id
+  init_p_lock_global(core_id);
+
+  console_init();
 
   if(core_id == 0) {
+    *flag = STATE_0;
+    
+    printm("\n");
+
+    api_result_t result;
+    cache_partition_t new_partition;
+
+    for(int i = 0; i < 64; i++) {
+      if(i == 0) {
+        new_partition.lgsizes[i] = 4;
+      } else if( i == 1 ) {
+        new_partition.lgsizes[i] = 7;
+      } else if( i == 3 ) {
+        new_partition.lgsizes[i] = 8;
+      } else if( i == 5 ) {
+        new_partition.lgsizes[i] = 7;
+      } else if( i == 6 ) {
+        new_partition.lgsizes[i] = 7;
+      } else if( i <  6 ) {
+        new_partition.lgsizes[i] = 5;
+      } else {
+        new_partition.lgsizes[i] = 0;
+      }
+    }
+
+    printm("Change LLC partitioning\n");
+    result = sm_region_cache_partitioning(&new_partition);
+    if(result != MONITOR_OK) {
+      printm("sm_region_cache_partitioning FAILED with error code %d\n", result);
+      test_completed();
+    }
+
     //uint64_t region1_id = addr_to_region_id((uintptr_t) &region1);
     uint64_t region2_id = addr_to_region_id((uintptr_t) &region2);
     uint64_t region3_id = addr_to_region_id((uintptr_t) &region3);
     uint64_t drawer_region_id = addr_to_region_id((uintptr_t) DRAWER_MEM_REG);
-
-    api_result_t result;
-
-    printm("\n");
 
     printm("Region block\n");
 
@@ -54,6 +91,25 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       printm("sm_region_block FAILED with error code %d\n\n", result);
       test_completed();
     }
+
+    printm("Region block\n");
+
+    result = sm_region_block(region2_id);
+    if(result != MONITOR_OK) {
+      printm("sm_region_block FAILED with error code %d\n\n", result);
+      test_completed();
+    }
+    
+    printm("Region block\n");
+
+    result = sm_region_block(drawer_region_id);
+    if(result != MONITOR_OK) {
+      printm("sm_region_block FAILED with error code %d\n\n", result);
+      test_completed();
+    }
+
+    *flag = STATE_1;
+    while(*flag != STATE_2);
 
     printm("Region free\n");
 
@@ -87,14 +143,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       test_completed();
     }
 
-    printm("Region block\n");
-
-    result = sm_region_block(region2_id);
-    if(result != MONITOR_OK) {
-      printm("sm_region_block FAILED with error code %d\n\n", result);
-      test_completed();
-    }
-
     printm("Region free\n");
 
     result = sm_region_free(region2_id);
@@ -108,14 +156,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     result = sm_region_assign(region2_id, enclave_id);
     if(result != MONITOR_OK) {
       printm("sm_region_assign FAILED with error code %d\n\n", result);
-      test_completed();
-    }
-
-    printm("Region block\n");
-
-    result = sm_region_block(drawer_region_id);
-    if(result != MONITOR_OK) {
-      printm("sm_region_block FAILED with error code %d\n\n", result);
       test_completed();
     }
 
@@ -270,8 +310,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     }
 
     // Let other thread know we are ready
-    while(*flag != STATE_0);
-    *flag = STATE_1;
+    while(*flag != STATE_2);
+    *flag = STATE_3;
     asm volatile("fence");
 
     printm("Enclave Enter\n");
@@ -280,9 +320,15 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     test_completed();
   }
   else if (core_id == 1) {
-    *flag = STATE_0;
     asm volatile("fence");
-    while(*flag != STATE_1);
+    while(*flag != STATE_3) {
+      if(*flag == STATE_1) {
+       api_result_t res = sm_region_update();
+       if(res == MONITOR_OK) {
+        *flag = STATE_2;
+       }
+      }
+    };
 
     pull_drawer_region();
 
@@ -337,7 +383,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 
     printm("Sign\n");
     // *** BEGINING BENCHMARK ***
+#if (MEASURE == 2)
     riscv_perf_cntr_begin();
+#endif
 
     int cnt_sig = 0;
     for(int i = 0; i < NUM_SIGN; i++) {
@@ -408,19 +456,25 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       ret = pop(qresp, (void **) &m);
       m = (msg_t *) get_pa(m);
     } while((ret != 0) || (m->f != F_EXIT));
-    
+
+#if (MEASURE == 2) 
     riscv_perf_cntr_end();
+#endif
     // *** END BENCHMARK *** 
     
     printm("Received enclave exit confirmation\n");
+    
+    bool res = true;
+
+#if (VERIFY == 1) 
     printm("End benchmark starts verification\n");
 
-    bool res = true;
     for(int i = 0; i < NUM_SIGN; i++) {
       //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
       res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], &pk);
     }
     printm("Verification %s\n", (res ? "is successful": "has failed"));
+#endif
 
     printm("End experiment\n");
     int cmd = (res == true) ? 0: 1;
@@ -428,7 +482,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     test_completed();
   }
   else {
-    printm("Core n %d\n\n", core_id);
+    printm("Error, this code only works for 2 Cores.\n Core n %d\n\n", core_id);
+    send_exit_cmd(1);
     test_completed();
   }
 }
@@ -436,9 +491,11 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 void pull_drawer_region() {
   //printm("Pull drawer\n");
   uint64_t drawer_region_id = addr_to_region_id((uintptr_t) DRAWER_MEM_REG);
-
+  
   api_result_t result;
+  
   do {
+    result = sm_region_update();
     result = sm_region_free(drawer_region_id);
   } while(result != MONITOR_OK);
 
