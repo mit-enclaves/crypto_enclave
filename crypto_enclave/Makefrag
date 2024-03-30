@@ -21,6 +21,7 @@ CRYPTO_ENCLAVE_INCLUDES := \
 
 CRYPTO_ENCLAVE_SRC := \
   $(CRYPTO_ENCLAVE_SRC_DIR)/memcpy.c \
+  $(CRYPTO_ENCLAVE_SRC_DIR)/memcpy_shm.c \
   $(CRYPTO_ENCLAVE_SRC_DIR)/enclave_entry.S \
   $(CRYPTO_ENCLAVE_SRC_DIR)/enclave_code.c \
   $(CRYPTO_ENCLAVE_SRC_DIR)/enclave_stack.S \
@@ -35,7 +36,6 @@ CRYPTO_ENCLAVE_SRC := \
   $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/verify.c \
   $(QUEUE_SRC_DIR)/msgq.c \
   $(PLATFORM_DIR)/platform_lock.c \
-  $(PLATFORM_DIR)/platform_control_spec.c \
   $(INFRA_DIR)/clib/memset.c \
 
 ifeq ($(DEBUG_ENCLAVE), 1)

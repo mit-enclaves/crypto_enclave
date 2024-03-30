@@ -39,7 +39,7 @@ else
 $(error BURST can be set to ALL, LOAD or NO)
 endif
 else
-CFLAGS += -D BURST=0
+CFLAGS += -D BURST=2
 endif
 
 ifdef MODE
