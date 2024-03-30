@@ -6,29 +6,41 @@
 #include <platform_lock.h>
 
 static inline void platform_disable_speculation() {
-    set_csr(CSR_MSPEC, MSPEC_NONE);
+    uint64_t mspec = read_csr(CSR_SPEC);
+    mspec |= MSPEC_NONE;
+    write_csr(CSR_SPEC, mspec);
 }
 
 static inline void platform_enable_speculation() {
-    clear_csr(CSR_MSPEC, MSPEC_NONE);
+    uint64_t mspec = read_csr(CSR_SPEC);
+    mspec &= ~MSPEC_NONE;
+    write_csr(CSR_SPEC, mspec);
 }
 
 static inline void platform_disable_predictors() {
-    set_csr(CSR_MSPEC, MSPEC_NOTRAINPRED);
-    set_csr(CSR_MSPEC, MSPEC_NOUSEPRED);
+    uint64_t mspec = read_csr(CSR_SPEC);
+    mspec |= MSPEC_NOTRAINPRED;
+    mspec |= MSPEC_NOUSEPRED;
+    write_csr(CSR_SPEC, mspec);
 }
 
 static inline void platform_enable_predictors() {
-    clear_csr(CSR_MSPEC, MSPEC_NOTRAINPRED);
-    clear_csr(CSR_MSPEC, MSPEC_NOUSEPRED);
+    uint64_t mspec = read_csr(CSR_SPEC);
+    mspec &= ~MSPEC_NOTRAINPRED;
+    mspec &= ~MSPEC_NOUSEPRED;
+    write_csr(CSR_SPEC, mspec);
 }
 
 static inline void platform_disable_L1() {
-    set_csr(CSR_MSPEC, MSPEC_NOUSEL1);
+    uint64_t mspec = read_csr(CSR_SPEC);
+    mspec |= MSPEC_NOUSEL1;
+    write_csr(CSR_SPEC, mspec);
 }
 
 static inline void platform_enable_L1() {
-    clear_csr(CSR_MSPEC, MSPEC_NOUSEL1);
+    uint64_t mspec = read_csr(CSR_SPEC);
+    mspec &= ~MSPEC_NOUSEL1;
+    write_csr(CSR_SPEC, mspec);
 }
 
 #endif // PLATFORM_CONTROL_SPEC_H
