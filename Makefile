@@ -67,13 +67,15 @@ CFLAGS += -D ENDIAN=2
 endif
 
 ifdef MEASURE
-ifeq ($(MEASURE), LOAD)
+ifeq ($(MEASURE), ALL)
+CFLAGS += -D MEASURE=0
+else ifeq ($(MEASURE), 1)
 CFLAGS += -D MEASURE=1
-else ifeq ($(MEASURE), ALL)
+else ifeq ($(MEASURE), 2)
 CFLAGS += -D MEASURE=2
-else ifeq ($(MEASURE), CRYPTO)
+else ifeq ($(MEASURE), 3)
 CFLAGS += -D MEASURE=3
-else ifeq ($(MEASURE), MEMCOPY)
+else ifeq ($(MEASURE), 4)
 CFLAGS += -D MEASURE=4
 else
 $(error MEASURE should be set to LOAD or ALL)	

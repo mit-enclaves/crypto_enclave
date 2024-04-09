@@ -25,15 +25,6 @@ CRYPTO_ENCLAVE_SRC := \
   $(CRYPTO_ENCLAVE_SRC_DIR)/enclave_entry.S \
   $(CRYPTO_ENCLAVE_SRC_DIR)/enclave_code.c \
   $(CRYPTO_ENCLAVE_SRC_DIR)/enclave_stack.S \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/add_scalar.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/fe.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/ge.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/key_exchange.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/keypair.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/sc.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/sha512.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/sign.c \
-  $(CRYPTO_ENCLAVE_SRC_DIR)/ed25519/verify.c \
   $(QUEUE_SRC_DIR)/msgq.c \
   $(PLATFORM_DIR)/platform_lock.c \
   $(INFRA_DIR)/clib/memset.c \

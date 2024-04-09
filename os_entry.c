@@ -31,7 +31,7 @@ extern int len_a;
 extern int len_elements[];
 extern char *a[];
 
-signature_t sigs[NUM_SIGN];
+uint8_t sigs[1500];
 
 void untrusted_main(int core_id, uintptr_t fdt_addr) {
   volatile int *flag = (int *) SHARED_MEM_SYNC;
@@ -258,34 +258,13 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     // HACKS ON HACKS - Leaves spaces for the two queues
     init_heap(SHARED_MEM_REG + (2 * sizeof(queue_t)), 500 * PAGE_SIZE);
 
-    // key_seed_t *seed = malloc(sizeof(key_seed_t));
-    uint64_t key_id;
-    public_key_t *pk = malloc(sizeof(public_key_t));
-
     msg_t *m;
     queue_t *qresp = SHARED_RESP_QUEUE;
     int ret;
-    
-    printm("Creat SK\n");
-    create_signing_key_pair(NULL, &key_id);
-    
-    do {
-      ret = pop(qresp, (void **) &m);
-    } while((ret != 0) || (m->f != F_CREATE_SIGN_K));
-    
-    printm("Get PK %d\n", key_id);
-    get_public_signing_key(key_id, pk);
-    
-    do {
-      ret = pop(qresp, (void **) &m);
-      //if((ret == 0)) { //&& (m->f == F_VERIFY)) {
-        //printm("result\n"); // %d\n", m->ret);
-      //}
-    } while((ret != 0) || (m->f != F_GET_SIGN_PK));
 
     printm("Sign\n");
     // *** BEGINING BENCHMARK ***
-#if (MEASURE == 2)
+#if (MEASURE == 0)
     riscv_perf_cntr_begin();
 #endif
 
@@ -295,7 +274,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
           ret = pop(qresp, (void **) &m);
         } while(!resp_queue_is_empty());
       }
-      sign(a[i%len_a], len_elements[i%len_a], key_id, &sigs[i]);
+      sign(a[0], len_elements[0], 0, &sigs[0]);
     }
 
     enclave_exit();
@@ -304,7 +283,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_EXIT));
 
-#if (MEASURE == 2) 
+#if (MEASURE == 0) 
     riscv_perf_cntr_end();
 #endif
     // *** END BENCHMARK *** 
@@ -312,16 +291,6 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     printm("Received enclave exit confirmation\n");
     
     bool res = true;
-
-#if (VERIFY == 1) 
-    printm("End benchmark starts verification\n");
-
-    for(int i = 0; i < NUM_SIGN; i++) {
-      //printm("sigs[%x] %d\n", i, sigs[i].bytes[0]);
-      res &= local_verify(&sigs[i], a[i%len_a], len_elements[i%len_a], pk);
-    }
-    printm("Verification %s\n", (res ? "is successful": "has failed"));
-#endif
 
     printm("End experiment\n");
     int cmd = (res == true) ? 0: 1;
