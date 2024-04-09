@@ -18,11 +18,20 @@
 
 #define SIZE_KEY_DIR 1
 
-void enclave_entry() {
-#if (BURST == 1)
-    platform_disable_predictors();
+extern int len_a;
+extern int len_elements[];
+extern char *a[];
+
+#if (MODE == 1)
+#define MEMCPY memcpy
+#else
+#define MEMCPY memcpy_shm
 #endif
-  platform_enable_L1();
+
+void enclave_entry() {
+#if (MODE == 3)
+  platform_disable_L1();
+#endif
   queue_t * qreq = SHARED_REQU_QUEUE;
   queue_t * qres = SHARED_RESP_QUEUE;
 
@@ -37,27 +46,25 @@ void enclave_entry() {
     switch((m)->f) {
       
       case F_SIGN:
-	size_t in_message_size = m->args[1];
-        char msg[1500];
-        char msg2[1500];
+	size_t in_message_size = m->args[2];
 #if (MEASURE == 1)
     	riscv_perf_cntr_begin();
-	memcpy_shm(&msg, (const void *) m->args[0], sizeof(char)* in_message_size);
+	MEMCPY(a[0], (const void *) m->args[0], sizeof(char)* in_message_size);
     	riscv_perf_cntr_end();
 #endif
 #if (MEASURE == 2)
     	riscv_perf_cntr_begin();
-	memcpy_shm((const void *) m->args[0], &msg, sizeof(char)* in_message_size);
+	MEMCPY((const void *) m->args[0], a[0], sizeof(char)* in_message_size);
     	riscv_perf_cntr_end();
 #endif
 #if (MEASURE == 3)
     	riscv_perf_cntr_begin();
-	memcpy_shm((const void *) m->args[0], (const void *) m->args[3], sizeof(char)* in_message_size);
+	MEMCPY((const void *) m->args[0], (const void *) m->args[1], sizeof(char)* in_message_size);
     	riscv_perf_cntr_end();
 #endif
 #if (MEASURE == 4)
     	riscv_perf_cntr_begin();
-	memcpy_shm(&msg2, &msg, sizeof(char)* in_message_size);
+	MEMCPY(a[0], a[1], sizeof(char)* in_message_size);
     	riscv_perf_cntr_end();
 #endif
         m->ret = 0;
@@ -69,10 +76,9 @@ void enclave_entry() {
         do {
           ret = push(qres, m);
         } while(ret != 0);
-#if (BURST == 1)
-        platform_enable_predictors();
+#if (MODE == 3)
+  	platform_enable_L1();
 #endif
-  	platform_disable_L1();
         while(1) {
           sm_exit_enclave();
         }

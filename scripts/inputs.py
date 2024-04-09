@@ -8,10 +8,10 @@ import os
 my_variable = os.environ.get('SIZE', 'ALL')
 
 if my_variable == 'SMALL':
-    len_a = 1 
+    len_a = 2 
 else:
     len_a = 256 * 12
-len_elements = [1500, 576, 576, 576, 576, 40, 40, 40, 40, 40, 40, 40]
+len_elements = [1500]
 len_b = len(len_elements)
 
 def randStr(N, chars = string.hexdigits):

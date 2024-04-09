@@ -28,42 +28,18 @@ else
 CFLAGS += -D SIZE=2
 endif
 
-ifdef BURST
-ifeq ($(BURST), ALL)
-CFLAGS += -D BURST=1
-else ifeq ($(BURST), LOAD)
-CFLAGS += -D BURST=2
-else ifeq ($(BURST), NO)
-CFLAGS += -D BURST=0
-else
-$(error BURST can be set to ALL, LOAD or NO)
-endif
-else
-CFLAGS += -D BURST=2
-endif
-
 ifdef MODE
-ifeq ($(MODE), COPY)
+ifeq ($(MODE), NO_BURST)
 CFLAGS += -D MODE=1
-else ifeq ($(MODE), PASS)
+else ifeq ($(MODE), BURST)
 CFLAGS += -D MODE=2
+else ifeq ($(MODE), BURST_L1)
+CFLAGS += -D MODE=3
 else
-$(error MODE can be set to COPY or PASS)	
+$(error MODE can be set to NO_BURST or BURST)	
 endif
 else
-CFLAGS += -D MODE=2	
-endif
-
-ifdef ENDIAN
-ifeq ($(ENDIAN), SWAP)
-CFLAGS += -D ENDIAN=1
-else ifeq ($(ENDIAN), LOAD)
-CFLAGS += -D ENDIAN=2
-else
-$(error ENDIAN should be set to SWAP or LOAD)
-endif
-else
-CFLAGS += -D ENDIAN=2
+CFLAGS += -D MODE=1
 endif
 
 ifdef MEASURE
@@ -81,19 +57,7 @@ else
 $(error MEASURE should be set to LOAD or ALL)	
 endif
 else
-CFLAGS += -D MEASURE=2
-endif
-
-ifdef VERIFY
-ifeq ($(VERIFY), YES)
-CFLAGS += -D VERIFY=1
-else ifeq ($(VERIFY), NO)
-CFLAGS += -D VERIFY=2
-else
-$(error VERIFY should be set to YES or NO)	
-endif
-else
-CFLAGS += -D VERIFY=2
+CFLAGS += -D MEASURE=1
 endif
 
 FLAGS_DEBUG_ENCLAVE :=

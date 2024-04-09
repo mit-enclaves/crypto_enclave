@@ -268,13 +268,15 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     riscv_perf_cntr_begin();
 #endif
 
+    memcpy(a[0], a[1], len_elements[0]);
+
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 
         do {
           ret = pop(qresp, (void **) &m);
         } while(!resp_queue_is_empty());
       }
-      sign(a[0], len_elements[0], 0, &sigs[0]);
+      sign(a[0], a[1], len_elements[0]);
     }
 
     enclave_exit();
