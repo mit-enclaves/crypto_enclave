@@ -293,20 +293,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
-      if(req_queue_is_full()) {
-	printm("Queue is full!!\n"); 
-        do {
-          ret = pop(qresp, (void **) &m);
-        } while(!resp_queue_is_empty());
-      }
-      hash(a[i%len_a], len_elements[i%len_a], &hashs[i]);
+      local_hash(a[i%len_a], len_elements[i%len_a], &hashs[i]);
     }
-
-    enclave_exit();
-    
-    do {
-      ret = pop(qresp, (void **) &m);
-    } while((ret != 0) || (m->f != F_EXIT));
 
 #if (MEASURE == 4) 
     riscv_perf_cntr_end();
