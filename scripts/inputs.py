@@ -6,12 +6,15 @@ import string
 import os
 
 my_variable = os.environ.get('SIZE', 'ALL')
+    
+len_a = 2 
 
 if my_variable == 'SMALL':
-    len_a = 2 
-else:
-    len_a = 256 * 12
-len_elements = [1500]
+    len_elements = [1500]
+elif my_variable == 'MEDIUM':
+    len_elements = [1024 * 10]
+elif my_variable == 'BIG':
+    len_elements = [1024 * 100]
 len_b = len(len_elements)
 
 def randStr(N, chars = string.hexdigits):

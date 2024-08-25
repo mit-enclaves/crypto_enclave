@@ -3,6 +3,7 @@
 #include <crypto_enclave_api.h>
 #include <msgq.h>
 #include <local_cryptography.h>
+#include "clib/clib.h"
 
 //extern uintptr_t region1;
 extern uintptr_t region2;
@@ -20,11 +21,7 @@ extern uintptr_t enclave_end;
 #define STATE_2 3
 #define STATE_3 4
 
-#if (SIZE == 1)
 #define NUM_SIGN 1
-#else
-#define NUM_SIGN 256*12
-#endif
 
 // INPUTS
 extern int len_a;
@@ -268,7 +265,9 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     riscv_perf_cntr_begin();
 #endif
 
+#if (WARMUP == 1)
     memcpy(a[0], a[1], len_elements[0]);
+#endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
       if(req_queue_is_full()) { 

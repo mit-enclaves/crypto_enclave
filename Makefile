@@ -19,13 +19,15 @@ LDFLAGS := -nostartfiles -nostdlib -static
 ifdef SIZE
 ifeq ($(SIZE), SMALL)
 CFLAGS += -D SIZE=1
-else ifeq ($(SIZE), ALL)
-CFLAGS += -D SIZE=2	
+else ifeq ($(SIZE), MEDIUM)
+CFLAGS += -D SIZE=1	
+else ifeq ($(SIZE), BIG)
+CFLAGS += -D SIZE=1	
 else
-$(error SIZE can be set to SMALL or ALL)
+$(error SIZE can be set to SMALL, MEDIUM or BIG)
 endif
 else
-CFLAGS += -D SIZE=2
+CFLAGS += -D SIZE=1
 endif
 
 ifdef MODE
@@ -33,13 +35,15 @@ ifeq ($(MODE), NO_BURST)
 CFLAGS += -D MODE=1
 else ifeq ($(MODE), BURST)
 CFLAGS += -D MODE=2
-else ifeq ($(MODE), BURST_L1)
+else ifeq ($(MODE), BURST_OPT)
 CFLAGS += -D MODE=3
+else ifeq ($(MODE), BURST_L1)
+CFLAGS += -D MODE=4
 else
 $(error MODE can be set to NO_BURST or BURST)	
 endif
 else
-CFLAGS += -D MODE=1
+CFLAGS += -D MODE=2
 endif
 
 ifdef MEASURE
@@ -58,6 +62,12 @@ $(error MEASURE should be set to LOAD or ALL)
 endif
 else
 CFLAGS += -D MEASURE=1
+endif
+
+ifdef WARMUP
+ifeq ($(WARMUP), YES)
+CFLAGS += -D WARMUP=1
+endif
 endif
 
 FLAGS_DEBUG_ENCLAVE :=

@@ -24,14 +24,13 @@ extern char *a[];
 
 #if (MODE == 1)
 #define MEMCPY memcpy
-#else
+#elif (MODE == 2)
 #define MEMCPY memcpy_shm
+#else
+#define MEMCPY memcpy_shm_opt
 #endif
 
 void enclave_entry() {
-#if (MODE == 3)
-  platform_disable_L1();
-#endif
   queue_t * qreq = SHARED_REQU_QUEUE;
   queue_t * qres = SHARED_RESP_QUEUE;
 
@@ -64,7 +63,7 @@ void enclave_entry() {
 #endif
 #if (MEASURE == 4)
     	riscv_perf_cntr_begin();
-	MEMCPY(a[0], a[1], sizeof(char)* in_message_size);
+	memcpy(a[0], a[1], len_elements[0]);
     	riscv_perf_cntr_end();
 #endif
         m->ret = 0;
@@ -76,9 +75,6 @@ void enclave_entry() {
         do {
           ret = push(qres, m);
         } while(ret != 0);
-#if (MODE == 3)
-  	platform_enable_L1();
-#endif
         while(1) {
           sm_exit_enclave();
         }
