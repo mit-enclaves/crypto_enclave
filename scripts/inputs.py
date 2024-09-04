@@ -10,7 +10,7 @@ my_variable = os.environ.get('SIZE', 'ALL')
 len_a = 2 
 
 if my_variable == 'SMALL':
-    len_elements = [1500]
+    len_elements = [1024]
 elif my_variable == 'MEDIUM':
     len_elements = [1024 * 10]
 elif my_variable == 'BIG':

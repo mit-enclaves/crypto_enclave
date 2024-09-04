@@ -44,6 +44,8 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     printm("\n");
 
     api_result_t result;
+
+    /*
     cache_partition_t new_partition;
 
     for(int i = 0; i < 64; i++) {
@@ -63,13 +65,12 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
         new_partition.lgsizes[i] = 0;
       }
     }
-
     printm("Change LLC partitioning\n");
     result = sm_region_cache_partitioning(&new_partition);
     if(result != MONITOR_OK) {
       printm("sm_region_cache_partitioning FAILED with error code %d\n", result);
       test_completed();
-    }
+    }*/
 
     //uint64_t region1_id = addr_to_region_id((uintptr_t) &region1);
     uint64_t region2_id = addr_to_region_id((uintptr_t) &region2);

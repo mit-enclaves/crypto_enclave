@@ -47,8 +47,9 @@ void enclave_entry() {
       case F_SIGN:
 	size_t in_message_size = m->args[2];
 #if (MEASURE == 1)
+	//MEMCPY(a[0], (void *) m->args[0], sizeof(char)* in_message_size);
     	riscv_perf_cntr_begin();
-	MEMCPY(a[0], (const void *) m->args[0], sizeof(char)* in_message_size);
+	MEMCPY(a[0], (void *) m->args[0], sizeof(char)* in_message_size);
     	riscv_perf_cntr_end();
 #endif
 #if (MEASURE == 2)
@@ -58,10 +59,11 @@ void enclave_entry() {
 #endif
 #if (MEASURE == 3)
     	riscv_perf_cntr_begin();
-	MEMCPY((const void *) m->args[0], (const void *) m->args[1], sizeof(char)* in_message_size);
+	MEMCPY((const void *) m->args[0], (void *) m->args[1], sizeof(char)* in_message_size);
     	riscv_perf_cntr_end();
 #endif
 #if (MEASURE == 4)
+	//memcpy(a[0], a[1], len_elements[0]);
     	riscv_perf_cntr_begin();
 	memcpy(a[0], a[1], len_elements[0]);
     	riscv_perf_cntr_end();
