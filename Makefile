@@ -20,12 +20,22 @@ ifdef SIZE
 ifeq ($(SIZE), SMALL)
 CFLAGS += -D SIZE=1
 else ifeq ($(SIZE), ALL)
-CFLAGS += -D SIZE=2	
+CFLAGS += -D SIZE=2
 else
 $(error SIZE can be set to SMALL or ALL)
 endif
 else
 CFLAGS += -D SIZE=2
+endif
+
+ifdef ENCLAVE
+ifeq ($(ENCLAVE), NO)
+CFLAGS += -D ENCLAVE=0
+else ifeq ($(ENCLAVE), YES)
+CFLAGS += -D ENCLAVE=1
+endif
+else
+CFLAGS += -D ENCLAVE=1
 endif
 
 ifdef BURST

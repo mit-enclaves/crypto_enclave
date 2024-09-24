@@ -259,7 +259,11 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     init_heap(SHARED_MEM_REG + (2 * sizeof(queue_t)), 500 * PAGE_SIZE);
 
     // key_seed_t *seed = malloc(sizeof(key_seed_t));
+#if (ENCLAVE == 1)
     uint64_t key_id;
+#elif (ENCLAVE == 0)
+    secret_key_t *sk = malloc(sizeof(secret_key_t));
+#endif
     public_key_t *pk = malloc(sizeof(public_key_t));
 
     msg_t *m;
@@ -267,21 +271,30 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     int ret;
     
     printm("Creat SK\n");
+#if (ENCLAVE == 1)
     create_signing_key_pair(NULL, &key_id);
+#elif (ENCLAVE == 0)
+    local_create_secret_signing_key(NULL, sk);
+#endif
     
+#if (ENCLAVE == 1)
     do {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_CREATE_SIGN_K));
     
     printm("Get PK %d\n", key_id);
     get_public_signing_key(key_id, pk);
-    
+
     do {
       ret = pop(qresp, (void **) &m);
       //if((ret == 0)) { //&& (m->f == F_VERIFY)) {
         //printm("result\n"); // %d\n", m->ret);
       //}
     } while((ret != 0) || (m->f != F_GET_SIGN_PK));
+#elif (ENCLAVE == 0)
+    printm("Get PK\n");
+    local_compute_public_signing_key(sk, pk);
+#endif
 
     printm("Sign\n");
     // *** BEGINING BENCHMARK ***
@@ -290,6 +303,7 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
 #endif
 
     for(int i = 0; i < NUM_SIGN; i++) {
+#if (ENCLAVE == 1)
       if(req_queue_is_full()) { 
         do {
           ret = pop(qresp, (void **) &m);
@@ -299,10 +313,14 @@ void untrusted_main(int core_id, uintptr_t fdt_addr) {
     }
 
     enclave_exit();
-    
+
     do {
       ret = pop(qresp, (void **) &m);
     } while((ret != 0) || (m->f != F_EXIT));
+#elif (ENCLAVE == 0)
+      local_sign(a[i%len_a], len_elements[i%len_a], pk, sk, &sigs[i]);
+    }
+#endif
 
 #if (MEASURE == 2) 
     riscv_perf_cntr_end();
